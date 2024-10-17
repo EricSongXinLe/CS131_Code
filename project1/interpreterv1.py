@@ -44,9 +44,23 @@ class Interpreter(InterpreterBase):
         for statement in func.get('statements'):
             if statement.elem_type == 'vardef':
                 #print(statement.dict['name'])
-                self.var_dict[statement.dict['name']] = None
+                var = statement.dict['name']
+                if var in self.var_dict:
+                    super().error(
+                    ErrorType.NAME_ERROR,
+                    f"Variable {var} defined more than once",
+                )
+                self.var_dict[var] = None
+
             elif statement.elem_type == '=':
-                self.var_dict[statement.dict['name']] = self.eval_expr(statement.dict['expression'])
+                var = statement.dict['name']
+                if var in self.var_dict:
+                    self.var_dict[var] = self.eval_expr(statement.dict['expression'])
+                else:
+                    super().error(
+                    ErrorType.NAME_ERROR,
+                    f"Variable {var} has not been defined",
+                )
                 #print(self.var_dict[statement.dict['name']])
             elif statement.elem_type == 'fcall':
                 self.func_call(statement.dict['name'],statement.dict['args'])
@@ -68,7 +82,8 @@ class Interpreter(InterpreterBase):
 
 program_source = """func main() {
 var x;
-x = 5 + 4 + 3;
+x = 3;
+x = 5 - (x+4);
 print(x);
 }
 """
