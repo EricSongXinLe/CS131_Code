@@ -9,6 +9,18 @@ class Interpreter(InterpreterBase):
     def eval_expr(self, expr):
         return 0 #this is temp
     
+    def func_call(self, func, args):
+        if func == 'print':
+            str = self.eval_expr(args)
+            super().output(str)
+            return None
+        if func == 'inputi':
+            str = self.eval_expr(args)
+            if str != '':
+                super().output(str)
+            user_input = super().get_input()
+            return user_input
+
 
     def run_func(self, func):
         for statement in func.get('statements'):
@@ -18,6 +30,10 @@ class Interpreter(InterpreterBase):
             elif statement.elem_type == '=':
                 self.var_dict[statement.dict['name']] = self.eval_expr(statement.dict['expression'])
                 #print(self.var_dict[statement.dict['name']])
+            elif statement.elem_type == 'fcall':
+                self.func_call(statement.dict['name'],statement.dict['args'])
+            else:
+                pass
     
     def run(self, program):
         ast = parse_program(program)
