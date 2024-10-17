@@ -7,11 +7,29 @@ class Interpreter(InterpreterBase):
         super().__init__(console_output, inp)
 
     def eval_expr(self, expr):
-        return 0 #this is temp
+        if expr.elem_type == '+':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            return op1 + op2
+        elif expr.elem_type == '-':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            return op1 - op2
+        elif expr.elem_type == 'var':
+            var = expr.dict['name']
+            if var in self.var_dict and self.var_dict[var] != None:
+                return self.var_dict[var]
+            else:
+                super().error(
+                    ErrorType.NAME_ERROR,
+                    f"Variable {var} has not been defined",
+                ) 
+        elif expr.elem_type == 'int' or expr.elem_type == 'string':
+            return expr.dict['val']
     
     def func_call(self, func, args):
         if func == 'print':
-            str = self.eval_expr(args)
+            str = self.eval_expr(args[0])
             super().output(str)
             return None
         if func == 'inputi':
@@ -50,8 +68,8 @@ class Interpreter(InterpreterBase):
 
 program_source = """func main() {
 var x;
-x = 5 + 6;
-print("The sum is: ", x);
+x = 5 + 4 + 3;
+print(x);
 }
 """
 
