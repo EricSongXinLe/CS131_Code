@@ -38,19 +38,31 @@ class Interpreter(InterpreterBase):
                 ) 
         elif expr.elem_type == 'int' or expr.elem_type == 'string':
             return expr.dict['val']
+        elif expr.elem_type == 'fcall':
+            func = expr.dict['name']
+            if func == 'inputi':
+                args = expr.dict['args']
+                if len(args) > 1:
+                    super().error(
+                    ErrorType.NAME_ERROR,
+                    f"No inputi() function found that takes > 1 parameter",
+                )
+                if args != []:
+                    out_string = self.eval_expr(args[0])
+                    super().output(out_string)
+                user_input = int(super().get_input())
+                return user_input
+            else:
+                super().error(
+                ErrorType.NAME_ERROR,
+                f"Function {func} has not been defined",
+            )
     
     def func_call(self, func, args):
         if func == 'print':
             str = self.eval_expr(args[0])
             super().output(str)
             return None
-        if func == 'inputi':
-            str = self.eval_expr(args)
-            if str != '':
-                super().output(str)
-            user_input = super().get_input()
-            return user_input
-
 
     def run_func(self, func):
         for statement in func.get('statements'):
@@ -94,12 +106,8 @@ class Interpreter(InterpreterBase):
 
 program_source = """func main() {
 var x;
-var y;
-y = 3 - (5 + 2);
-x = 3;
-x = ((5 + (6 - 3)) - ((2 - 3) - (1 - 7)));
-x = "hi!" + "say";
-print(x);
+x = inputi("Please input your fav number: ");
+print(x+1-(3+5));
 }
 """
 
