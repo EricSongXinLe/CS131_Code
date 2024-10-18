@@ -60,9 +60,14 @@ class Interpreter(InterpreterBase):
     
     def func_call(self, func, args):
         if func == 'print':
-            str = self.eval_expr(args[0])
-            super().output(str)
+            outstr = str(self.eval_expr(args[0]))
+            super().output(outstr)
             return None
+        else:
+            super().error(
+                ErrorType.NAME_ERROR,
+                f"Function {func} has not been defined",
+            )
 
     def run_func(self, func):
         for statement in func.get('statements'):
