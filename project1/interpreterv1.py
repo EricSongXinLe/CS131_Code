@@ -60,7 +60,9 @@ class Interpreter(InterpreterBase):
     
     def func_call(self, func, args):
         if func == 'print':
-            outstr = str(self.eval_expr(args[0]))
+            outstr = ''
+            for arg in args:
+                outstr += str(self.eval_expr(arg))
             super().output(outstr)
             return None
         else:
@@ -108,13 +110,12 @@ class Interpreter(InterpreterBase):
     
         
 
-
+'''
 program_source = """func main() {
-var x;
-x = inputi("Please input your fav number: ");
-print(x+1-(3+5));
+print();
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
+'''
