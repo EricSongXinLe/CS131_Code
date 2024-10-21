@@ -110,12 +110,11 @@ class Interpreter(InterpreterBase):
     
         
 
-'''
+
 program_source = """func main() {
-print();
+inputi("hi: ");
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
-'''
