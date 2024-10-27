@@ -27,6 +27,86 @@ class Interpreter(InterpreterBase):
                 ErrorType.TYPE_ERROR,
                 "Incompatible types for arithmetic operation",
             )
+        elif expr.elem_type == '*':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, int) and isinstance(op2, int):
+                return op1 * op2
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+        elif expr.elem_type == '/':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, int) and isinstance(op2, int):
+                return op1 // op2
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+        elif expr.elem_type == '==':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if type(op1) == type(op2):
+                return (op1 == op2)
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+        elif expr.elem_type == '!=':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if type(op1) == type(op2):
+                return (op1 != op2)
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+        elif expr.elem_type == '<':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if type(op1) == type(op2):
+                return (op1 < op2)
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+        elif expr.elem_type == '<=':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if type(op1) == type(op2):
+                return (op1 <= op2)
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+        elif expr.elem_type == '>':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if type(op1) == type(op2):
+                return (op1 > op2)
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+        elif expr.elem_type == '>=':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if type(op1) == type(op2):
+                return (op1 >= op2)
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
         elif expr.elem_type == 'var':
             var = expr.dict['name']
             if var in self.var_dict and self.var_dict[var] != None:
@@ -127,9 +207,10 @@ class Interpreter(InterpreterBase):
 
 program_source = """func main() {
 var x;
-x = inputs("hi: ");
-x = true;
-print(x);
+var y;
+x = 3;
+y = 3;
+print(x != y);
 }
 """
 
