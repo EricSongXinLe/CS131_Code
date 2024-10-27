@@ -36,8 +36,10 @@ class Interpreter(InterpreterBase):
                     ErrorType.NAME_ERROR,
                     f"Variable {var} has not been defined",
                 ) 
-        elif expr.elem_type == 'int' or expr.elem_type == 'string':
+        elif expr.elem_type == 'int' or expr.elem_type == 'string' or expr.elem_type == 'bool':
             return expr.dict['val']
+        elif expr.elem_type == 'nil':
+            return None
         elif expr.elem_type == 'fcall':
             func = expr.dict['name']
             if func == 'inputi':
@@ -51,6 +53,18 @@ class Interpreter(InterpreterBase):
                     out_string = self.eval_expr(args[0])
                     super().output(out_string)
                 user_input = int(super().get_input())
+                return user_input
+            if func == 'inputs':
+                args = expr.dict['args']
+                if len(args) > 1:
+                    super().error(
+                    ErrorType.NAME_ERROR,
+                    f"No inputs() function found that takes > 1 parameter",
+                )
+                if args != []:
+                    out_string = self.eval_expr(args[0])
+                    super().output(out_string)
+                user_input = str(super().get_input())
                 return user_input
             else:
                 super().error(
@@ -112,7 +126,10 @@ class Interpreter(InterpreterBase):
 
 
 program_source = """func main() {
-inputi("hi: ");
+var x;
+x = inputs("hi: ");
+x = true;
+print(x);
 }
 """
 
