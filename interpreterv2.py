@@ -132,6 +132,12 @@ class Interpreter(InterpreterBase):
                     ErrorType.NAME_ERROR,
                     f"Variable {var} has not been defined",
                 ) 
+        elif expr.elem_type == 'neg':
+            op1 = self.eval_expr(expr.dict['op1'])
+            return 0-op1
+        elif expr.elem_type == '!':
+            op1 = self.eval_expr(expr.dict['op1'])
+            return not op1
         elif expr.elem_type == 'int' or expr.elem_type == 'string' or expr.elem_type == 'bool':
             return expr.dict['val']
         elif expr.elem_type == 'nil':
@@ -226,7 +232,7 @@ class Interpreter(InterpreterBase):
 
 
 program_source = """func main() {
-print("hi"+ "Eric");
+print(!false);
 }
 """
 
