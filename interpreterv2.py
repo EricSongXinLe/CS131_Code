@@ -134,10 +134,27 @@ class Interpreter(InterpreterBase):
                 ) 
         elif expr.elem_type == 'neg':
             op1 = self.eval_expr(expr.dict['op1'])
-            return 0-op1
+            if op1 == True or op1 == False:
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Incompatible types for neg operation",
+                ) 
+            elif isinstance(op1, int):
+                return 0-op1
+            else:
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Incompatible types for neg operation",
+                ) 
         elif expr.elem_type == '!':
             op1 = self.eval_expr(expr.dict['op1'])
-            return not op1
+            if isinstance(op1, bool):
+                return not op1
+            else:
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Incompatible types for ! operation",
+                ) 
         elif expr.elem_type == 'int' or expr.elem_type == 'string' or expr.elem_type == 'bool':
             return expr.dict['val']
         elif expr.elem_type == 'nil':
@@ -230,11 +247,12 @@ class Interpreter(InterpreterBase):
     
         
 
-
+'''
 program_source = """func main() {
-print(!false);
+print(-false);
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
+'''
