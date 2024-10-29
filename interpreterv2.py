@@ -12,6 +12,8 @@ class Interpreter(InterpreterBase):
             op2 = self.eval_expr(expr.dict['op2'])
             if isinstance(op1, int) and isinstance(op2, int):
                 return op1 + op2
+            elif isinstance(op1, str) and isinstance(op2, str):
+                return op1 + op2
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -53,20 +55,14 @@ class Interpreter(InterpreterBase):
             if type(op1) == type(op2):
                 return (op1 == op2)
             else:
-                super().error(
-                ErrorType.TYPE_ERROR,
-                "Incompatible types for arithmetic operation",
-            )
+                return False
         elif expr.elem_type == '!=':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
             if type(op1) == type(op2):
                 return (op1 != op2)
             else:
-                super().error(
-                ErrorType.TYPE_ERROR,
-                "Incompatible types for arithmetic operation",
-            )
+                return True
         elif expr.elem_type == '<':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
@@ -75,7 +71,7 @@ class Interpreter(InterpreterBase):
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
-                "Incompatible types for arithmetic operation",
+                "Incompatible types for < operation",
             )
         elif expr.elem_type == '<=':
             op1 = self.eval_expr(expr.dict['op1'])
@@ -85,7 +81,7 @@ class Interpreter(InterpreterBase):
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
-                "Incompatible types for arithmetic operation",
+                "Incompatible types for <= operation",
             )
         elif expr.elem_type == '>':
             op1 = self.eval_expr(expr.dict['op1'])
@@ -95,7 +91,7 @@ class Interpreter(InterpreterBase):
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
-                "Incompatible types for arithmetic operation",
+                "Incompatible types for > operation",
             )
         elif expr.elem_type == '>=':
             op1 = self.eval_expr(expr.dict['op1'])
@@ -105,7 +101,27 @@ class Interpreter(InterpreterBase):
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
-                "Incompatible types for arithmetic operation",
+                "Incompatible types for >= operation",
+            )
+        elif expr.elem_type == '&&':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, bool) and isinstance(op2, bool):
+                return op1 and op2
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for && operation",
+            )
+        elif expr.elem_type == '||':
+            op1 = self.eval_expr(expr.dict['op1'])
+            op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, bool) and isinstance(op2, bool):
+                return op1 or op2
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for or operation",
             )
         elif expr.elem_type == 'var':
             var = expr.dict['name']
@@ -157,6 +173,10 @@ class Interpreter(InterpreterBase):
             outstr = ''
             for arg in args:
                 outstr += str(self.eval_expr(arg))
+            if outstr == 'True':
+                outstr = 'true'
+            elif outstr == 'False':
+                outstr = 'false'
             super().output(outstr)
             return None
         else:
@@ -206,11 +226,7 @@ class Interpreter(InterpreterBase):
 
 
 program_source = """func main() {
-var x;
-var y;
-x = 3;
-y = 3;
-print(x != y);
+print("hi"+ "Eric");
 }
 """
 
