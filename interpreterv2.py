@@ -173,6 +173,7 @@ class Interpreter(InterpreterBase):
             elif outstr == 'False':
                 outstr = 'false'
             super().output(outstr)
+            return None
         elif func == 'inputi':
             if len(args) > 1:
                 super().error(
@@ -231,8 +232,9 @@ class Interpreter(InterpreterBase):
                     for statement in statement.dict['statements']:
                         self.exec_statment(statement)
                 else:
-                    for statement in statement.dict['else_statements']:
-                        self.exec_statment(statement)
+                    if statement.dict['else_statements'] != None:
+                        for statement in statement.dict['else_statements']:
+                            self.exec_statment(statement)
             else:
                 super().error(
                     ErrorType.TYPE_ERROR,
@@ -258,14 +260,17 @@ class Interpreter(InterpreterBase):
     
         
 
-'''
+
 program_source = """func main() {
   var val;
-  val = inputi("hi");
+  val = 0;
+  
+  if (nil != nil){
+    print("Ugh");
+  }
   print(val);
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
-'''
