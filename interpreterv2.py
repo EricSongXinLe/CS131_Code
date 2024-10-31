@@ -240,6 +240,16 @@ class Interpreter(InterpreterBase):
                     ErrorType.TYPE_ERROR,
                     "Condition must eval to bool",
                 )
+        elif statement.elem_type == 'for':
+            init=statement.dict['init']
+            self.exec_statment(init)
+            cond = statement.dict['condition']
+            update =statement.dict['update']
+            statements = statement.dict['statements']
+            while(self.eval_expr(cond)):
+                for statement in statements:
+                        self.exec_statment(statement)
+                self.exec_statment(update)
         else:
             pass
 
@@ -260,17 +270,15 @@ class Interpreter(InterpreterBase):
     
         
 
-
+'''
 program_source = """func main() {
-  var val;
-  val = 0;
-  
-  if (nil != nil){
-    print("Ugh");
+  var i;
+  for (i = 0; i < 5; i = i + 1) {
+    print(i);
   }
-  print(val);
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
+'''
