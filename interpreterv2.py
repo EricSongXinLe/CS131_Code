@@ -161,7 +161,7 @@ class Interpreter(InterpreterBase):
             return None
         elif expr.elem_type == 'fcall':
             func = expr.dict['name']
-            self.func_call(func,expr.dict['args'] )
+            return self.func_call(func,expr.dict['args'] )
     
     def func_call(self, func, args):
         if func == 'print':
@@ -258,12 +258,14 @@ class Interpreter(InterpreterBase):
     
         
 
-
+'''
 program_source = """func main() {
   var val;
   val = inputi("hi");
+  print(val);
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
+'''
