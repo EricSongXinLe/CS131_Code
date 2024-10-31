@@ -173,28 +173,28 @@ class Interpreter(InterpreterBase):
             elif outstr == 'False':
                 outstr = 'false'
             super().output(outstr)
-            if func == 'inputi':
-                if len(args) > 1:
-                    super().error(
-                    ErrorType.NAME_ERROR,
-                    f"No inputi() function found that takes > 1 parameter",
-                )
-                if args != []:
-                    out_string = self.eval_expr(args[0])
-                    super().output(out_string)
-                user_input = int(super().get_input())
-                return user_input
-            if func == 'inputs':
-                if len(args) > 1:
-                    super().error(
-                    ErrorType.NAME_ERROR,
-                    f"No inputs() function found that takes > 1 parameter",
-                )
-                if args != []:
-                    out_string = self.eval_expr(args[0])
-                    super().output(out_string)
-                user_input = str(super().get_input())
-                return user_input
+        elif func == 'inputi':
+            if len(args) > 1:
+                super().error(
+                ErrorType.NAME_ERROR,
+                f"No inputi() function found that takes > 1 parameter",
+            )
+            if args != []:
+                out_string = self.eval_expr(args[0])
+                super().output(out_string)
+            user_input = int(super().get_input())
+            return user_input
+        elif func == 'inputs':
+            if len(args) > 1:
+                super().error(
+                ErrorType.NAME_ERROR,
+                f"No inputs() function found that takes > 1 parameter",
+            )
+            if args != []:
+                out_string = self.eval_expr(args[0])
+                super().output(out_string)
+            user_input = str(super().get_input())
+            return user_input
         else:
             super().error(
                 ErrorType.NAME_ERROR,
@@ -261,10 +261,7 @@ class Interpreter(InterpreterBase):
 
 program_source = """func main() {
   var val;
-  val = nil;
-  if (val == nil) {
-    print("val is nil");
-  }
+  val = inputi("hi");
 }
 """
 
