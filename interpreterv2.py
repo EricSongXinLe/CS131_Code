@@ -161,35 +161,7 @@ class Interpreter(InterpreterBase):
             return None
         elif expr.elem_type == 'fcall':
             func = expr.dict['name']
-            if func == 'inputi':
-                args = expr.dict['args']
-                if len(args) > 1:
-                    super().error(
-                    ErrorType.NAME_ERROR,
-                    f"No inputi() function found that takes > 1 parameter",
-                )
-                if args != []:
-                    out_string = self.eval_expr(args[0])
-                    super().output(out_string)
-                user_input = int(super().get_input())
-                return user_input
-            if func == 'inputs':
-                args = expr.dict['args']
-                if len(args) > 1:
-                    super().error(
-                    ErrorType.NAME_ERROR,
-                    f"No inputs() function found that takes > 1 parameter",
-                )
-                if args != []:
-                    out_string = self.eval_expr(args[0])
-                    super().output(out_string)
-                user_input = str(super().get_input())
-                return user_input
-            else:
-                super().error(
-                ErrorType.NAME_ERROR,
-                f"Function {func} has not been defined",
-            )
+            self.func_call(func,expr.dict['args'] )
     
     def func_call(self, func, args):
         if func == 'print':
@@ -201,7 +173,28 @@ class Interpreter(InterpreterBase):
             elif outstr == 'False':
                 outstr = 'false'
             super().output(outstr)
-            return None
+            if func == 'inputi':
+                if len(args) > 1:
+                    super().error(
+                    ErrorType.NAME_ERROR,
+                    f"No inputi() function found that takes > 1 parameter",
+                )
+                if args != []:
+                    out_string = self.eval_expr(args[0])
+                    super().output(out_string)
+                user_input = int(super().get_input())
+                return user_input
+            if func == 'inputs':
+                if len(args) > 1:
+                    super().error(
+                    ErrorType.NAME_ERROR,
+                    f"No inputs() function found that takes > 1 parameter",
+                )
+                if args != []:
+                    out_string = self.eval_expr(args[0])
+                    super().output(out_string)
+                user_input = str(super().get_input())
+                return user_input
         else:
             super().error(
                 ErrorType.NAME_ERROR,
@@ -232,6 +225,15 @@ class Interpreter(InterpreterBase):
                 #print(self.var_dict[statement.dict['name']])
             elif statement.elem_type == 'fcall':
                 self.func_call(statement.dict['name'],statement.dict['args'])
+            elif statement.elem_type == 'if':
+                cond = statement.dict['condition']
+                cond = self.eval_expr(cond)
+                if cond:
+                    for statement in statement.dict['statements']:
+                        self.eval_expr(statement)
+                else:
+                    for statement in statement.dict['else_statements']:
+                        self.eval_expr(statement)
             else:
                 pass
     
@@ -247,12 +249,19 @@ class Interpreter(InterpreterBase):
     
         
 
-'''
+
 program_source = """func main() {
-print(-false);
+var x;
+x = true;
+var y;
+y = false;
+if(x && y && false){
+    print("FUck");    
+}else{
+    print("Shit!!");
+}
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
-'''
