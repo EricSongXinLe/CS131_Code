@@ -125,7 +125,7 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == 'var':
             var = expr.dict['name']
-            if var in self.var_dict and self.var_dict[var] != None:
+            if var in self.var_dict:
                 return self.var_dict[var]
             else:
                 super().error(
@@ -200,42 +200,51 @@ class Interpreter(InterpreterBase):
                 ErrorType.NAME_ERROR,
                 f"Function {func} has not been defined",
             )
+    def exec_statment(self, statement):
+        if statement.elem_type == 'vardef':
+            #print(statement.dict['name'])
+            var = statement.dict['name']
+            if var in self.var_dict:
+                super().error(
+                ErrorType.NAME_ERROR,
+                f"Variable {var} defined more than once",
+            )
+            self.var_dict[var] = None
+
+        elif statement.elem_type == '=':
+            var = statement.dict['name']
+            if var in self.var_dict:
+                self.var_dict[var] = self.eval_expr(statement.dict['expression'])
+            else:
+                super().error(
+                ErrorType.NAME_ERROR,
+                f"Variable {var} has not been defined",
+            )
+            #print(self.var_dict[statement.dict['name']])
+        elif statement.elem_type == 'fcall':
+            self.func_call(statement.dict['name'],statement.dict['args'])
+        elif statement.elem_type == 'if':
+            cond = statement.dict['condition']
+            cond = self.eval_expr(cond)
+            if isinstance(cond,bool):
+                if cond:
+                    for statement in statement.dict['statements']:
+                        self.exec_statment(statement)
+                else:
+                    for statement in statement.dict['else_statements']:
+                        self.exec_statment(statement)
+            else:
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Condition must eval to bool",
+                )
+        else:
+            pass
+
 
     def run_func(self, func):
         for statement in func.get('statements'):
-            if statement.elem_type == 'vardef':
-                #print(statement.dict['name'])
-                var = statement.dict['name']
-                if var in self.var_dict:
-                    super().error(
-                    ErrorType.NAME_ERROR,
-                    f"Variable {var} defined more than once",
-                )
-                self.var_dict[var] = None
-
-            elif statement.elem_type == '=':
-                var = statement.dict['name']
-                if var in self.var_dict:
-                    self.var_dict[var] = self.eval_expr(statement.dict['expression'])
-                else:
-                    super().error(
-                    ErrorType.NAME_ERROR,
-                    f"Variable {var} has not been defined",
-                )
-                #print(self.var_dict[statement.dict['name']])
-            elif statement.elem_type == 'fcall':
-                self.func_call(statement.dict['name'],statement.dict['args'])
-            elif statement.elem_type == 'if':
-                cond = statement.dict['condition']
-                cond = self.eval_expr(cond)
-                if cond:
-                    for statement in statement.dict['statements']:
-                        self.eval_expr(statement)
-                else:
-                    for statement in statement.dict['else_statements']:
-                        self.eval_expr(statement)
-            else:
-                pass
+            self.exec_statment(statement)
     
     def run(self, program):
         ast = parse_program(program)
@@ -251,15 +260,11 @@ class Interpreter(InterpreterBase):
 
 
 program_source = """func main() {
-var x;
-x = true;
-var y;
-y = false;
-if(x && y && false){
-    print("FUck");    
-}else{
-    print("Shit!!");
-}
+  var val;
+  val = nil;
+  if (val == nil) {
+    print("val is nil");
+  }
 }
 """
 
