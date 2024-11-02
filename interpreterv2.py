@@ -159,7 +159,7 @@ class Interpreter(InterpreterBase):
                 ) 
         elif expr.elem_type == 'neg':
             op1 = self.eval_expr(expr.dict['op1'])
-            if op1 == True or op1 == False:
+            if isinstance(op1,bool):
                 super().error(
                     ErrorType.TYPE_ERROR,
                     "Incompatible types for neg operation",
