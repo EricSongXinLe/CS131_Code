@@ -125,9 +125,14 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == 'var':
             var = expr.dict['name']
-            if var in self.var_dict:
-                return self.var_dict[var]
-            else:
+            stack_depth = len(self.env_stack)
+            found = False
+            for i in range(1,stack_depth+1):
+                if var in self.env_stack[-i]:
+                    found = True
+                    return self.env_stack[-i][var] #var found in current scope
+                #not found, go to previous stack.
+            if(not found):
                 super().error(
                     ErrorType.NAME_ERROR,
                     f"Variable {var} has not been defined",
@@ -205,23 +210,26 @@ class Interpreter(InterpreterBase):
         if statement.elem_type == 'vardef':
             #print(statement.dict['name'])
             var = statement.dict['name']
-            if var in self.var_dict:
+            if var in self.env_stack[-1]: #looks at current scope.
                 super().error(
                 ErrorType.NAME_ERROR,
                 f"Variable {var} defined more than once",
             )
-            self.var_dict[var] = None
+            self.env_stack[-1][var] = None 
 
         elif statement.elem_type == '=':
             var = statement.dict['name']
-            if var in self.var_dict:
-                self.var_dict[var] = self.eval_expr(statement.dict['expression'])
-            else:
+            stack_depth = len(self.env_stack)
+            found = False
+            for i in range(1,stack_depth+1):
+                if var in self.env_stack[-i] and not found:
+                    found = True
+                    self.env_stack[-i][var] = self.eval_expr(statement.dict['expression'])
+            if(not found): #still not found??
                 super().error(
                 ErrorType.NAME_ERROR,
                 f"Variable {var} has not been defined",
             )
-            #print(self.var_dict[statement.dict['name']])
         elif statement.elem_type == 'fcall':
             self.func_call(statement.dict['name'],statement.dict['args'])
         elif statement.elem_type == 'if':
@@ -229,12 +237,16 @@ class Interpreter(InterpreterBase):
             cond = self.eval_expr(cond)
             if isinstance(cond,bool):
                 if cond:
+                    self.env_stack.append(dict())
                     for statement in statement.dict['statements']:
                         self.exec_statment(statement)
+                    self.env_stack.pop()
                 else:
                     if statement.dict['else_statements'] != None:
+                        self.env_stack.append(dict())
                         for statement in statement.dict['else_statements']:
                             self.exec_statment(statement)
+                        self.env_stack.pop()
             else:
                 super().error(
                     ErrorType.TYPE_ERROR,
@@ -247,9 +259,14 @@ class Interpreter(InterpreterBase):
             update =statement.dict['update']
             statements = statement.dict['statements']
             while(self.eval_expr(cond)):
+                self.env_stack.append(dict())
                 for statement in statements:
                         self.exec_statment(statement)
+                self.env_stack.pop()
                 self.exec_statment(update)
+        elif statement.elem_type == 'return':
+            expr = statement.dict['expression']
+            return self.eval_expr(expr)
         else:
             pass
 
@@ -260,7 +277,8 @@ class Interpreter(InterpreterBase):
     
     def run(self, program):
         ast = parse_program(program)
-        self.var_dict = dict()
+        self.env_stack = []
+        self.env_stack.append(dict())
         funcs = ast.dict['functions'] #for proj 1 we only have 1 function?
         main = funcs[0]
         if main.dict['name'] != "main":
@@ -270,15 +288,18 @@ class Interpreter(InterpreterBase):
     
         
 
-'''
+
 program_source = """func main() {
   var i;
-  for (i = 0; i < 5; i = i + 1) {
+  i = true;
+  if(i){
+    var i;
+    i = "shit!!";
     print(i);
   }
+  print(i);
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
-'''
