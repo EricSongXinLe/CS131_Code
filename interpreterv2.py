@@ -10,6 +10,11 @@ class Interpreter(InterpreterBase):
         if expr.elem_type == '+':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
             if isinstance(op1, int) and isinstance(op2, int):
                 return op1 + op2
             elif isinstance(op1, str) and isinstance(op2, str):
@@ -22,6 +27,11 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '-':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
             if isinstance(op1, int) and isinstance(op2, int):
                 return op1 - op2
             else:
@@ -32,6 +42,11 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '*':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
             if isinstance(op1, int) and isinstance(op2, int):
                 return op1 * op2
             else:
@@ -42,6 +57,11 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '/':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
             if isinstance(op1, int) and isinstance(op2, int):
                 return op1 // op2
             else:
@@ -263,13 +283,18 @@ class Interpreter(InterpreterBase):
                 if cond:
                     self.env_stack.append(dict())
                     for statement in statement.dict['statements']:
-                        self.exec_statment(statement)
+                        result = self.exec_statment(statement)
+                        if result != None:
+                            return result
                     self.env_stack.pop()
                 else:
                     if statement.dict['else_statements'] != None:
                         self.env_stack.append(dict())
                         for statement in statement.dict['else_statements']:
-                            self.exec_statment(statement)
+                            #self.exec_statment(statement)
+                            result = self.exec_statment(statement)
+                            if result != None:
+                                return result
                         self.env_stack.pop()
             else:
                 super().error(
@@ -285,7 +310,9 @@ class Interpreter(InterpreterBase):
             while(self.eval_expr(cond)):
                 self.env_stack.append(dict())
                 for statement in statements:
-                        self.exec_statment(statement)
+                    result = self.exec_statment(statement)
+                    if result != None:
+                        return result
                 self.env_stack.pop()
                 self.exec_statment(update)
         elif statement.elem_type == 'return':
@@ -318,20 +345,17 @@ class Interpreter(InterpreterBase):
     
         
 
-
 program_source = """
 func foo(c) { 
-  if (c == 10) {
-    return 5;
-  }
-  else {
-    return 3;
-  }
+    if(c == 1){
+        return;
+    }
+    print(c);
+    foo(c-1);
 }
 
 func main() {
-  print(foo(10));
-  print(foo(11));
+    foo(5);
 }
 """
 
