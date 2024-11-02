@@ -168,8 +168,8 @@ class Interpreter(InterpreterBase):
             func = expr.dict['name']
             return self.func_call(func,expr.dict['args'] )
     
-    def func_call(self, func, args):
-        if func == 'print':
+    def func_call(self, funcName, args):
+        if funcName == 'print':
             outstr = ''
             for arg in args:
                 outstr += str(self.eval_expr(arg))
@@ -179,7 +179,7 @@ class Interpreter(InterpreterBase):
                 outstr = 'false'
             super().output(outstr)
             return None
-        elif func == 'inputi':
+        elif funcName == 'inputi':
             if len(args) > 1:
                 super().error(
                 ErrorType.NAME_ERROR,
@@ -190,7 +190,7 @@ class Interpreter(InterpreterBase):
                 super().output(out_string)
             user_input = int(super().get_input())
             return user_input
-        elif func == 'inputs':
+        elif funcName == 'inputs':
             if len(args) > 1:
                 super().error(
                 ErrorType.NAME_ERROR,
@@ -202,10 +202,34 @@ class Interpreter(InterpreterBase):
             user_input = str(super().get_input())
             return user_input
         else:
-            super().error(
-                ErrorType.NAME_ERROR,
-                f"Function {func} has not been defined",
-            )
+            found = False
+            callerArgs = args
+            for func in self.funcs:
+                currFuncName = func.dict['name']
+                currFuncArgs = func.dict['args']
+                if currFuncName == funcName:
+                    if len(currFuncArgs) == len(args):
+                        found = True
+                        calleeArgs = currFuncArgs
+                        ##var copy starts
+                        self.env_stack.append(dict())
+                        for calleeArg,callerArg in zip(calleeArgs,callerArgs):
+                            #print(type(callerArg))
+                            callerVal = self.eval_expr(callerArg) ##Maybe a const or a var.
+                            self.env_stack[-1][calleeArg.dict['name']] = callerVal ##Finds the caller arg from prev stack, and copies it to the new stack.
+                        # execution
+                        for statement in func.dict['statements']:
+                            exec_result = self.exec_statment(statement)
+                            if(exec_result!= None):
+                                self.env_stack.pop()
+                                return exec_result
+                        self.env_stack.pop()
+                        return None
+            if not found:
+                super().error(
+                    ErrorType.NAME_ERROR,
+                    f"No corrsponding function: {funcName} found",
+                )
     def exec_statment(self, statement):
         if statement.elem_type == 'vardef':
             #print(statement.dict['name'])
@@ -266,7 +290,10 @@ class Interpreter(InterpreterBase):
                 self.exec_statment(update)
         elif statement.elem_type == 'return':
             expr = statement.dict['expression']
-            return self.eval_expr(expr)
+            if expr == None:
+                return None
+            else:
+                return self.eval_expr(expr)
         else:
             pass
 
@@ -279,9 +306,9 @@ class Interpreter(InterpreterBase):
         ast = parse_program(program)
         self.env_stack = []
         self.env_stack.append(dict())
-        funcs = ast.dict['functions']
+        self.funcs = ast.dict['functions']
         main = None
-        for func in funcs:
+        for func in self.funcs:
             if func.dict['name'] == "main":
                 main = func
         if main == None:
@@ -293,18 +320,18 @@ class Interpreter(InterpreterBase):
 
 
 program_source = """
-func foo(){
-    print("fuck!!");
-}
-func main() {
-  var i;
-  i = true;
-  if(i){
-    var i;
-    i = "shit!!";
-    print(i);
+func foo(c) { 
+  if (c == 10) {
+    return 5;
   }
-  print(i);
+  else {
+    return 3;
+  }
+}
+
+func main() {
+  print(foo(10));
+  print(foo(11));
 }
 """
 
