@@ -279,9 +279,12 @@ class Interpreter(InterpreterBase):
         ast = parse_program(program)
         self.env_stack = []
         self.env_stack.append(dict())
-        funcs = ast.dict['functions'] #for proj 1 we only have 1 function?
-        main = funcs[0]
-        if main.dict['name'] != "main":
+        funcs = ast.dict['functions']
+        main = None
+        for func in funcs:
+            if func.dict['name'] == "main":
+                main = func
+        if main == None:
             super().error(ErrorType.NAME_ERROR,"No main() function was found",)
         self.run_func(main)
     
@@ -289,7 +292,11 @@ class Interpreter(InterpreterBase):
         
 
 
-program_source = """func main() {
+program_source = """
+func foo(){
+    print("fuck!!");
+}
+func main() {
   var i;
   i = true;
   if(i){
