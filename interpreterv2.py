@@ -318,7 +318,12 @@ class Interpreter(InterpreterBase):
             cond = statement.dict['condition']
             update =statement.dict['update']
             statements = statement.dict['statements']
-            while(self.eval_expr(cond)):
+            while(status := self.eval_expr(cond)):
+                if not isinstance(status, bool):
+                    super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Condition must eval to bool",
+                )
                 self.env_stack[-1].append(dict())
                 for statement in statements:
                     result = self.exec_statment(statement)
@@ -355,24 +360,22 @@ class Interpreter(InterpreterBase):
         self.run_func(main)
     
     
-        
-'''
+
 program_source = """
-func foo(y) { 
-    if(y==1){
-    return;
-    }
-    print(y);
-    foo(y-1);
+
+func multiply(a, b) {
+    return a * b;
+}
+
+func addAndMultiply(a, b, c) {
+    return multiply(a + b, c);
 }
 
 func main() {
-    var y;
-    y = 2;
-    foo(y);
+    print(addAndMultiply(2, 3, 4));
 }
+
 """
 
 inter = Interpreter()
 inter.run(program_source)
-'''
