@@ -3,6 +3,9 @@ from intbase import ErrorType
 from brewparse import parse_program
 
 class Interpreter(InterpreterBase):
+    class Nil:
+        def __eq__(self, other):
+            return isinstance(other,Interpreter.Nil)
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
@@ -183,7 +186,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == 'int' or expr.elem_type == 'string' or expr.elem_type == 'bool':
             return expr.dict['val']
         elif expr.elem_type == 'nil':
-            return None
+            return self.Nil()
         elif expr.elem_type == 'fcall':
             func = expr.dict['name']
             return self.func_call(func,expr.dict['args'] )
@@ -198,7 +201,7 @@ class Interpreter(InterpreterBase):
             elif outstr == 'False':
                 outstr = 'false'
             super().output(outstr)
-            return None
+            return self.Nil()
         elif funcName == 'inputi':
             if len(args) > 1:
                 super().error(
@@ -252,7 +255,7 @@ class Interpreter(InterpreterBase):
                                 self.env_stack.pop()
                                 return exec_result
                         self.env_stack.pop()
-                        return None
+                        return self.Nil()
             if not found:
                 super().error(
                     ErrorType.NAME_ERROR,
@@ -326,7 +329,7 @@ class Interpreter(InterpreterBase):
         elif statement.elem_type == 'return':
             expr = statement.dict['expression']
             if expr == None:
-                return None
+                return self.Nil()
             else:
                 return self.eval_expr(expr)
         else:
@@ -355,14 +358,18 @@ class Interpreter(InterpreterBase):
         
 '''
 program_source = """
-func foo() { 
+func foo(y) { 
+    if(y==1){
+    return;
+    }
     print(y);
+    foo(y-1);
 }
 
 func main() {
     var y;
-    y = 1;
-    foo();
+    y = 2;
+    foo(y);
 }
 """
 
