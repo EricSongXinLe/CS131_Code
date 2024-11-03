@@ -366,12 +366,7 @@ class Interpreter(InterpreterBase):
         self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
         self.env_stack[-1].append(dict())
         self.funcs = ast.dict['functions']
-        main = None
-        for func in self.funcs:
-            if func.dict['name'] == "main":
-                main = func
-        if main == None:
-            super().error(ErrorType.NAME_ERROR,"No main() function was found",)
+        
         self.func_call("main",[])
     
     
