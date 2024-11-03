@@ -359,9 +359,11 @@ class Interpreter(InterpreterBase):
             pass
 
 
-    def run_func(self, func):
+    def run_func(self, func): ##this is legacy code that just takes about main.
         for statement in func.get('statements'):
-            self.exec_statment(statement)
+            result = self.exec_statment(statement)
+            if result != None:
+                return result
     
     def run(self, program):
         ast = parse_program(program)
@@ -380,16 +382,15 @@ class Interpreter(InterpreterBase):
     
 '''
 program_source = """
-func nilReturnTest(a) {
-    if (a > 0) {
-        return a;
-    } else {if (a == 0) {
-        return;
-    }}
-}
-
 func main() {
-print("hi"<"fuck");     
+    var x;
+    x = 5;
+    if (x == 5) {
+        print("Inside if pre return");
+        return;
+        print("Inside if post return");
+    }
+    print("Outside if");
 }
 """
 
