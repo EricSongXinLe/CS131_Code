@@ -145,12 +145,12 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == 'var':
             var = expr.dict['name']
-            stack_depth = len(self.env_stack)
+            stack_depth = len(self.env_stack[-1])
             found = False
             for i in range(1,stack_depth+1):
-                if var in self.env_stack[-i]:
+                if var in self.env_stack[-1][-i]:
                     found = True
-                    return self.env_stack[-i][var] #var found in current scope
+                    return self.env_stack[-1][-i][var] #var found in current scope
                 #not found, go to previous stack.
             if(not found):
                 super().error(
@@ -232,11 +232,19 @@ class Interpreter(InterpreterBase):
                         found = True
                         calleeArgs = currFuncArgs
                         ##var copy starts
-                        self.env_stack.append(dict())
-                        for calleeArg,callerArg in zip(calleeArgs,callerArgs):
-                            #print(type(callerArg))
-                            callerVal = self.eval_expr(callerArg) ##Maybe a const or a var.
-                            self.env_stack[-1][calleeArg.dict['name']] = callerVal ##Finds the caller arg from prev stack, and copies it to the new stack.
+                        if callerArgs == []:
+                            self.env_stack.append([])
+                            self.env_stack[-1].append(dict())
+                        else:
+                            count = 0
+                            for calleeArg,callerArg in zip(calleeArgs,callerArgs):
+                                #print(type(callerArg))
+                                callerVal = self.eval_expr(callerArg) ##Maybe a const or a var.
+                                if count == 0:
+                                    self.env_stack.append([])
+                                    self.env_stack[-1].append(dict())
+                                    count+=1
+                                self.env_stack[-1][-1][calleeArg.dict['name']] = callerVal ##Finds the caller arg from prev stack, and copies it to the new stack.
                         # execution
                         for statement in func.dict['statements']:
                             exec_result = self.exec_statment(statement)
@@ -254,21 +262,21 @@ class Interpreter(InterpreterBase):
         if statement.elem_type == 'vardef':
             #print(statement.dict['name'])
             var = statement.dict['name']
-            if var in self.env_stack[-1]: #looks at current scope.
+            if var in self.env_stack[-1][-1]: #looks at current scope.
                 super().error(
                 ErrorType.NAME_ERROR,
                 f"Variable {var} defined more than once",
             )
-            self.env_stack[-1][var] = None 
+            self.env_stack[-1][-1][var] = None 
 
         elif statement.elem_type == '=':
             var = statement.dict['name']
-            stack_depth = len(self.env_stack)
+            stack_depth = len(self.env_stack[-1])
             found = False
             for i in range(1,stack_depth+1):
-                if var in self.env_stack[-i] and not found:
+                if var in self.env_stack[-1][-i] and not found:
                     found = True
-                    self.env_stack[-i][var] = self.eval_expr(statement.dict['expression'])
+                    self.env_stack[-1][-i][var] = self.eval_expr(statement.dict['expression'])
             if(not found): #still not found??
                 super().error(
                 ErrorType.NAME_ERROR,
@@ -281,21 +289,21 @@ class Interpreter(InterpreterBase):
             cond = self.eval_expr(cond)
             if isinstance(cond,bool):
                 if cond:
-                    self.env_stack.append(dict())
+                    self.env_stack[-1].append(dict())
                     for statement in statement.dict['statements']:
                         result = self.exec_statment(statement)
                         if result != None:
                             return result
-                    self.env_stack.pop()
+                    self.env_stack[-1].pop()
                 else:
                     if statement.dict['else_statements'] != None:
-                        self.env_stack.append(dict())
+                        self.env_stack[-1].append(dict())
                         for statement in statement.dict['else_statements']:
                             #self.exec_statment(statement)
                             result = self.exec_statment(statement)
                             if result != None:
                                 return result
-                        self.env_stack.pop()
+                        self.env_stack[-1].pop()
             else:
                 super().error(
                     ErrorType.TYPE_ERROR,
@@ -308,12 +316,12 @@ class Interpreter(InterpreterBase):
             update =statement.dict['update']
             statements = statement.dict['statements']
             while(self.eval_expr(cond)):
-                self.env_stack.append(dict())
+                self.env_stack[-1].append(dict())
                 for statement in statements:
                     result = self.exec_statment(statement)
                     if result != None:
                         return result
-                self.env_stack.pop()
+                self.env_stack[-1].pop()
                 self.exec_statment(update)
         elif statement.elem_type == 'return':
             expr = statement.dict['expression']
@@ -332,7 +340,8 @@ class Interpreter(InterpreterBase):
     def run(self, program):
         ast = parse_program(program)
         self.env_stack = []
-        self.env_stack.append(dict())
+        self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
+        self.env_stack[-1].append(dict())
         self.funcs = ast.dict['functions']
         main = None
         for func in self.funcs:
@@ -344,20 +353,19 @@ class Interpreter(InterpreterBase):
     
     
         
-
+'''
 program_source = """
-func foo(c) { 
-    if(c == 1){
-        return;
-    }
-    print(c);
-    foo(c-1);
+func foo() { 
+    print(y);
 }
 
 func main() {
-    foo(5);
+    var y;
+    y = 1;
+    foo();
 }
 """
 
 inter = Interpreter()
 inter.run(program_source)
+'''
