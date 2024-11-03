@@ -239,14 +239,12 @@ class Interpreter(InterpreterBase):
                             self.env_stack.append([])
                             self.env_stack[-1].append(dict())
                         else:
-                            count = 0
-                            for calleeArg,callerArg in zip(calleeArgs,callerArgs):
-                                #print(type(callerArg))
-                                callerVal = self.eval_expr(callerArg) ##Maybe a const or a var.
-                                if count == 0:
-                                    self.env_stack.append([])
-                                    self.env_stack[-1].append(dict())
-                                    count+=1
+                            callerVals = []
+                            for callerArg in callerArgs:
+                                callerVals.append(self.eval_expr(callerArg))
+                            self.env_stack.append([])
+                            self.env_stack[-1].append(dict())
+                            for calleeArg,callerVal in zip(calleeArgs,callerVals):
                                 self.env_stack[-1][-1][calleeArg.dict['name']] = callerVal ##Finds the caller arg from prev stack, and copies it to the new stack.
                         # execution
                         for statement in func.dict['statements']:
@@ -363,16 +361,13 @@ class Interpreter(InterpreterBase):
 
 program_source = """
 
-func multiply(a, b) {
-    return a * b;
-}
-
-func addAndMultiply(a, b, c) {
-    return multiply(a + b, c);
+func noReturn() {
 }
 
 func main() {
-    print(addAndMultiply(2, 3, 4));
+    var result;
+    result = noReturn();
+    print(result == nil);
 }
 
 """
