@@ -89,7 +89,12 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '<':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
-            if type(op1) == type(op2):
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+            if isinstance(op1, int) and isinstance(op2, int):
                 return (op1 < op2)
             else:
                 super().error(
@@ -99,7 +104,12 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '<=':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
-            if type(op1) == type(op2):
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+            if isinstance(op1, int) and isinstance(op2, int):
                 return (op1 <= op2)
             else:
                 super().error(
@@ -109,7 +119,12 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '>':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
-            if type(op1) == type(op2):
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+            if isinstance(op1, int) and isinstance(op2, int):
                 return (op1 > op2)
             else:
                 super().error(
@@ -119,7 +134,12 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '>=':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
-            if type(op1) == type(op2):
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for arithmetic operation",
+            )
+            if isinstance(op1, int) and isinstance(op2, int):
                 return (op1 >= op2)
             else:
                 super().error(
@@ -358,19 +378,21 @@ class Interpreter(InterpreterBase):
         self.run_func(main)
     
     
-
+'''
 program_source = """
-
-func noReturn() {
+func nilReturnTest(a) {
+    if (a > 0) {
+        return a;
+    } else {if (a == 0) {
+        return;
+    }}
 }
 
 func main() {
-    var result;
-    result = noReturn();
-    print(result == nil);
+print("hi"<"fuck");     
 }
-
 """
 
 inter = Interpreter()
 inter.run(program_source)
+'''
