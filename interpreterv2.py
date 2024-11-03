@@ -359,11 +359,6 @@ class Interpreter(InterpreterBase):
             pass
 
 
-    def run_func(self, func): ##this is legacy code that just takes about main.
-        for statement in func.get('statements'):
-            result = self.exec_statment(statement)
-            if result != None:
-                return result
     
     def run(self, program):
         ast = parse_program(program)
@@ -377,7 +372,7 @@ class Interpreter(InterpreterBase):
                 main = func
         if main == None:
             super().error(ErrorType.NAME_ERROR,"No main() function was found",)
-        self.run_func(main)
+        self.func_call("main",[])
     
     
 '''
