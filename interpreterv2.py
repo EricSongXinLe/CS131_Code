@@ -215,11 +215,12 @@ class Interpreter(InterpreterBase):
         if funcName == 'print':
             outstr = ''
             for arg in args:
-                outstr += str(self.eval_expr(arg))
-            if outstr == 'True':
-                outstr = 'true'
-            elif outstr == 'False':
-                outstr = 'false'
+                curr = str(self.eval_expr(arg))
+                if curr == 'True':
+                    curr = 'true'
+                elif curr == 'False':
+                    curr = 'false'
+                outstr += curr
             super().output(outstr)
             return self.Nil()
         elif funcName == 'inputi':
@@ -366,22 +367,20 @@ class Interpreter(InterpreterBase):
         self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
         self.env_stack[-1].append(dict())
         self.funcs = ast.dict['functions']
-        
+
         self.func_call("main",[])
     
     
 '''
 program_source = """
-func main() {
-    var x;
-    x = 5;
-    if (x == 5) {
-        print("Inside if pre return");
-        return;
-        print("Inside if post return");
-    }
-    print("Outside if");
+func bletch(a) {
+  print("The answer is: ", a);
 }
+
+func main() {
+  bletch(2==1);
+}
+
 """
 
 inter = Interpreter()
