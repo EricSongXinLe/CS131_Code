@@ -6,6 +6,8 @@ class Interpreter(InterpreterBase):
     class Nil:
         def __eq__(self, other):
             return isinstance(other,Interpreter.Nil)
+        def __str__(self):
+            return "nil"
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
@@ -373,12 +375,9 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-    func bletch(a) {
-    print("The answer is: ", a);
-    }
 
     func main() {
-    bletch(2==1);
+    print(nil);
     }
 
     """
