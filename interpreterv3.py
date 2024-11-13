@@ -77,6 +77,17 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '==':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                if isinstance(op1,int):
+                    if op1 == 0:
+                        op1 = False
+                    else:
+                        op1 = True
+                if isinstance(op2,int):
+                    if op2 == 0:
+                        op2 = False
+                    else:
+                        op2 = True                    
             if type(op1) == type(op2):
                 return (op1 == op2)
             else:
@@ -84,6 +95,17 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '!=':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1, bool) or isinstance(op2, bool):
+                if isinstance(op1,int):
+                    if op1 == 0:
+                        op1 = False
+                    else:
+                        op1 = True
+                if isinstance(op2,int):
+                    if op2 == 0:
+                        op2 = False
+                    else:
+                        op2 = True        
             if type(op1) == type(op2):
                 return (op1 != op2)
             else:
@@ -151,6 +173,16 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '&&':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1,int):
+                if op1 == 0:
+                    op1 = False
+                else:
+                    op1 = True
+            if isinstance(op2,int):
+                if op2 == 0:
+                    op2 = False
+                else:
+                    op2 = True     
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 and op2
             else:
@@ -161,6 +193,16 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '||':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1,int):
+                if op1 == 0:
+                    op1 = False
+                else:
+                    op1 = True
+            if isinstance(op2,int):
+                if op2 == 0:
+                    op2 = False
+                else:
+                    op2 = True        
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 or op2
             else:
@@ -377,7 +419,7 @@ if __name__ == '__main__':
     program_source = """
 
     func main() {
-    print(nil);
+    print(0 || 3);
     }
 
     """
