@@ -250,6 +250,11 @@ class Interpreter(InterpreterBase):
             op1 = self.eval_expr(expr.dict['op1'])
             if isinstance(op1, bool):
                 return not op1
+            elif isinstance(op1, int):
+                if op1 == 0:
+                    return True
+                else:
+                    return False
             else:
                 super().error(
                     ErrorType.TYPE_ERROR,
@@ -464,13 +469,8 @@ class Interpreter(InterpreterBase):
 if __name__ == '__main__':
     program_source = """
     
-    func foo (a:string):void{
-        print(a);
-    }
     func main() : void {
-        var a:string;
-        a = "f";
-        foo(a);
+    print(!0);
     }
     
 
