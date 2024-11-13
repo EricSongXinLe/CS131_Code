@@ -11,6 +11,14 @@ class Interpreter(InterpreterBase):
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
+    def determine_type(self,var):
+        if isinstance(var,int):
+            return "int"
+        elif isinstance(var,bool):
+            return "bool"
+        elif isinstance(var, str):
+            return "string"
+        
     def eval_expr(self, expr):
         if expr.elem_type == '+':
             op1 = self.eval_expr(expr.dict['op1'])
@@ -217,7 +225,7 @@ class Interpreter(InterpreterBase):
             for i in range(1,stack_depth+1):
                 if var in self.env_stack[-1][-i]:
                     found = True
-                    return self.env_stack[-1][-i][var] #var found in current scope
+                    return self.env_stack[-1][-i][var][0] #var found in current scope
                 #not found, go to previous stack.
             if(not found):
                 super().error(
@@ -310,7 +318,22 @@ class Interpreter(InterpreterBase):
                             self.env_stack.append([])
                             self.env_stack[-1].append(dict())
                             for calleeArg,callerVal in zip(calleeArgs,callerVals):
-                                self.env_stack[-1][-1][calleeArg.dict['name']] = callerVal ##Finds the caller arg from prev stack, and copies it to the new stack.
+                                callervarType = self.determine_type(callerVal)
+                                calleevarType = calleeArg.dict['var_type']
+                                if callervarType == calleevarType:
+                                    self.env_stack[-1][-1][calleeArg.dict['name']] = [callerVal,calleevarType] ##Finds the caller arg from prev stack, and copies it to the new stack.
+                                elif callervarType == "int" and calleevarType == "bool":
+                                    if callerVal == 0:
+                                        callerVal = False
+                                    else:
+                                        callerVal = True
+                                    self.env_stack[-1][-1][calleeArg.dict['name']] = [callerVal,calleevarType] ##Finds the caller arg from prev stack, and copies it to the new stack.
+                                else:
+                                    super().error(
+                                    ErrorType.TYPE_ERROR,
+                                    f"fcall Var Type not match",
+                                )
+                                    
                         # execution
                         for statement in func.dict['statements']:
                             exec_result = self.exec_statment(statement)
@@ -328,12 +351,20 @@ class Interpreter(InterpreterBase):
         if statement.elem_type == 'vardef':
             #print(statement.dict['name'])
             var = statement.dict['name']
+            varType = statement.dict['var_type']
             if var in self.env_stack[-1][-1]: #looks at current scope.
                 super().error(
                 ErrorType.NAME_ERROR,
                 f"Variable {var} defined more than once",
             )
-            self.env_stack[-1][-1][var] = None 
+            match varType:
+                case "int":
+                    self.env_stack[-1][-1][var] = [0,varType]
+                case "string":
+                    self.env_stack[-1][-1][var] = ["",varType]
+                case "bool":
+                    self.env_stack[-1][-1][var] = [False,varType]
+            #self.env_stack[-1][-1][var] = None 
 
         elif statement.elem_type == '=':
             var = statement.dict['name']
@@ -342,7 +373,22 @@ class Interpreter(InterpreterBase):
             for i in range(1,stack_depth+1):
                 if var in self.env_stack[-1][-i] and not found:
                     found = True
-                    self.env_stack[-1][-i][var] = self.eval_expr(statement.dict['expression'])
+                    val = self.eval_expr(statement.dict['expression'])
+                    valType = self.determine_type(val)
+                    varType = self.env_stack[-1][-i][var][1]
+                    if valType ==varType:
+                        self.env_stack[-1][-i][var] = [val,valType]
+                    elif valType == "int" and varType == "bool":
+                        if val == 0:
+                            val = False
+                        else:
+                            val = True
+                        self.env_stack[-1][-i][var] = [val,valType]
+                    else:
+                        super().error(
+                            ErrorType.TYPE_ERROR,
+                            f"var assignment Type not match",
+                        )
             if(not found): #still not found??
                 super().error(
                 ErrorType.NAME_ERROR,
@@ -417,10 +463,16 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-
-    func main() {
-    print(0 || 3);
+    
+    func foo (a:string):void{
+        print(a);
     }
+    func main() : void {
+        var a:string;
+        a = "f";
+        foo(a);
+    }
+    
 
     """
 
