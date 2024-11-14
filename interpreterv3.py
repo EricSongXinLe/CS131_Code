@@ -8,6 +8,10 @@ class Interpreter(InterpreterBase):
             return isinstance(other,Interpreter.Nil)
         def __str__(self):
             return "nil"
+    class Void:
+        def __eq__(self, other):
+            return isinstance(other,Interpreter.Void)
+
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
@@ -275,12 +279,21 @@ class Interpreter(InterpreterBase):
         if funcName == 'print':
             outstr = ''
             for arg in args:
-                curr = str(self.eval_expr(arg))
-                if curr == 'True':
-                    curr = 'true'
-                elif curr == 'False':
-                    curr = 'false'
-                outstr += curr
+                #print(arg)
+                eval_result = self.eval_expr(arg)
+                #print(type(eval_result))
+                if eval_result != self.Void():
+                    curr = str(eval_result)
+                    if curr == 'True':
+                        curr = 'true'
+                    elif curr == 'False':
+                        curr = 'false'
+                    outstr += curr
+                else:
+                    super().error(
+                ErrorType.TYPE_ERROR,
+                f"void not allows as parameter",
+                )
             super().output(outstr)
         elif funcName == 'inputi':
             if len(args) > 1:
@@ -346,25 +359,31 @@ class Interpreter(InterpreterBase):
                         for statement in func.dict['statements']:
                             exec_result = self.exec_statment(statement)
                             if(exec_result!= None):
-                                self.env_stack.pop()
-                                actualRetType = self.determine_type(exec_result)
-                                #print(funcRetType)
-                                #print(actualRetType)
-                                if exec_result != self.Nil():
-                                    if funcRetType == actualRetType:
-                                        self.env_stack.pop()
-                                        return exec_result
-                                    elif funcRetType == 'bool' and actualRetType == 'int':
-                                        self.env_stack.pop()
-                                        if exec_result == 0:
-                                            return False
+                                if funcRetType != "void":
+                                    self.env_stack.pop()
+                                    actualRetType = self.determine_type(exec_result)
+                                    #print(funcRetType)
+                                    #print(actualRetType)
+                                    if exec_result != self.Nil():
+                                        if funcRetType == actualRetType:
+                                            self.env_stack.pop()
+                                            return exec_result
+                                        elif funcRetType == 'bool' and actualRetType == 'int':
+                                            self.env_stack.pop()
+                                            if exec_result == 0:
+                                                return False
+                                            else:
+                                                return True
                                         else:
-                                            return True
-                                    else:
-                                        super().error(
+                                            super().error(
+                                            ErrorType.TYPE_ERROR,
+                                            f"fcall return type wrong!",
+                                        )
+                                elif exec_result != self.Nil():
+                                    super().error(
                                         ErrorType.TYPE_ERROR,
-                                        f"fcall return type wrong!",
-                                    )                                    
+                                        f"void function should not return!",
+                                    )                                                                                                 
                         self.env_stack.pop()
                         if funcRetType == "int":
                             return 0
@@ -372,6 +391,8 @@ class Interpreter(InterpreterBase):
                             return False
                         elif funcRetType == "string":
                             return ""
+                        elif funcRetType == "void":
+                            return self.Void()
                         else:
                             return self.Nil()
             if not found:
@@ -499,8 +520,8 @@ if __name__ == '__main__':
    func main() : void {
    print(foo());
 }
-    func foo() : string {
-    return 5;
+    func foo() : void {
+    return;
     }
     
 
