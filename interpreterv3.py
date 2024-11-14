@@ -13,7 +13,10 @@ class Interpreter(InterpreterBase):
 
     def determine_type(self,var):
         if isinstance(var,int):
-            return "int"
+            if var is True or var is False:
+                return "bool"
+            else:
+                return "int"
         elif isinstance(var,bool):
             return "bool"
         elif isinstance(var, str):
@@ -344,7 +347,24 @@ class Interpreter(InterpreterBase):
                             exec_result = self.exec_statment(statement)
                             if(exec_result!= None):
                                 self.env_stack.pop()
-                                return exec_result
+                                funcRetType = func.dict['return_type']
+                                actualRetType = self.determine_type(exec_result)
+                                #print(funcRetType)
+                                #print(actualRetType)
+                                if funcRetType == actualRetType:
+                                    self.env_stack.pop()
+                                    return exec_result
+                                elif funcRetType == 'bool' and actualRetType == 'int':
+                                    self.env_stack.pop()
+                                    if exec_result == 0:
+                                        return False
+                                    else:
+                                        return True
+                                else:
+                                    super().error(
+                                    ErrorType.TYPE_ERROR,
+                                    f"fcall return type wrong!",
+                                )                                    
                         self.env_stack.pop()
                         return self.Nil()
             if not found:
@@ -469,9 +489,13 @@ class Interpreter(InterpreterBase):
 if __name__ == '__main__':
     program_source = """
     
-    func main() : void {
-    print(!0);
-    }
+   func main() : void {
+	var a : bool;
+    a = 3;
+}
+func foo() : int {
+  return true;
+}
     
 
     """
