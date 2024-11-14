@@ -282,7 +282,6 @@ class Interpreter(InterpreterBase):
                     curr = 'false'
                 outstr += curr
             super().output(outstr)
-            return self.Nil()
         elif funcName == 'inputi':
             if len(args) > 1:
                 super().error(
@@ -343,30 +342,38 @@ class Interpreter(InterpreterBase):
                                 )
                                     
                         # execution
+                        funcRetType = func.dict['return_type']
                         for statement in func.dict['statements']:
                             exec_result = self.exec_statment(statement)
                             if(exec_result!= None):
                                 self.env_stack.pop()
-                                funcRetType = func.dict['return_type']
                                 actualRetType = self.determine_type(exec_result)
                                 #print(funcRetType)
                                 #print(actualRetType)
-                                if funcRetType == actualRetType:
-                                    self.env_stack.pop()
-                                    return exec_result
-                                elif funcRetType == 'bool' and actualRetType == 'int':
-                                    self.env_stack.pop()
-                                    if exec_result == 0:
-                                        return False
+                                if exec_result != self.Nil():
+                                    if funcRetType == actualRetType:
+                                        self.env_stack.pop()
+                                        return exec_result
+                                    elif funcRetType == 'bool' and actualRetType == 'int':
+                                        self.env_stack.pop()
+                                        if exec_result == 0:
+                                            return False
+                                        else:
+                                            return True
                                     else:
-                                        return True
-                                else:
-                                    super().error(
-                                    ErrorType.TYPE_ERROR,
-                                    f"fcall return type wrong!",
-                                )                                    
+                                        super().error(
+                                        ErrorType.TYPE_ERROR,
+                                        f"fcall return type wrong!",
+                                    )                                    
                         self.env_stack.pop()
-                        return self.Nil()
+                        if funcRetType == "int":
+                            return 0
+                        elif funcRetType == "bool":
+                            return False
+                        elif funcRetType == "string":
+                            return ""
+                        else:
+                            return self.Nil()
             if not found:
                 super().error(
                     ErrorType.NAME_ERROR,
@@ -490,12 +497,11 @@ if __name__ == '__main__':
     program_source = """
     
    func main() : void {
-	var a : bool;
-    a = 3;
+   print(foo());
 }
-func foo() : int {
-  return true;
-}
+    func foo() : string {
+    return 5;
+    }
     
 
     """
