@@ -502,13 +502,33 @@ class Interpreter(InterpreterBase):
         else:
             pass
 
-
-    
+    def process_structs(self,structs):
+        for struct in structs:
+            struct_name = struct.dict['name']
+            self.struct_LUT[struct_name] = {} #
+            self.valid_types.add(struct_name)
+            fields = struct.dict['fields']
+            for field in fields:
+                field_name = field.dict['name']
+                field_type = field.dict['var_type']
+                if field_type in self.valid_types:
+                    self.struct_LUT[struct_name][field_name] = field_type
+                else:
+                    super().error(
+                        ErrorType.TYPE_ERROR,
+                        f"invalid fieldType {field_type} in {field_name}",
+                    )
+        #print(self.struct_LUT)
+        #print(self.valid_types)
     def run(self, program):
         ast = parse_program(program)
         self.env_stack = []
         self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
         self.env_stack[-1].append(dict())
+        self.valid_types = {"int","bool","string","nil"} #Set
+        self.struct_LUT = {} #Look Up Table for the struct structures. 
+        structs = ast.dict['structs']
+        self.process_structs(structs)
         self.funcs = ast.dict['functions']
 
         self.func_call("main",[])
@@ -517,10 +537,15 @@ class Interpreter(InterpreterBase):
 if __name__ == '__main__':
     program_source = """
     
-   func main() : void {
-   print(foo());
+struct person {
+  name: string;
+  age: int;
 }
-    func foo() : void {
+struct d{
+age: person;
+}
+
+    func main() : void {
     return;
     }
     
