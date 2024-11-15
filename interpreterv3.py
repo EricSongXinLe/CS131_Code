@@ -410,13 +410,19 @@ class Interpreter(InterpreterBase):
                 ErrorType.NAME_ERROR,
                 f"Variable {var} defined more than once",
             )
-            match varType:
-                case "int":
-                    self.env_stack[-1][-1][var] = [0,varType]
-                case "string":
-                    self.env_stack[-1][-1][var] = ["",varType]
-                case "bool":
-                    self.env_stack[-1][-1][var] = [False,varType]
+            if varType == "int":
+                self.env_stack[-1][-1][var] = [0,varType]
+            elif varType == "string":
+                self.env_stack[-1][-1][var] = ["",varType]
+            elif varType =="bool":
+                self.env_stack[-1][-1][var] = [False,varType]
+            elif varType in self.valid_types:
+                self.env_stack[-1][-1][var] = [self.Nil(),varType]
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                f"Unknown/invalid type specified {varType}",
+            )
             #self.env_stack[-1][-1][var] = None 
 
         elif statement.elem_type == '=':
@@ -525,7 +531,7 @@ class Interpreter(InterpreterBase):
         self.env_stack = []
         self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
         self.env_stack[-1].append(dict())
-        self.valid_types = {"int","bool","string","nil"} #Set
+        self.valid_types = {"int","bool","string"} #Set
         self.struct_LUT = {} #Look Up Table for the struct structures. 
         structs = ast.dict['structs']
         self.process_structs(structs)
@@ -546,7 +552,7 @@ age: person;
 }
 
     func main() : void {
-    return;
+    var x: df;
     }
     
 
