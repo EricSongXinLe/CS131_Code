@@ -255,6 +255,7 @@ class Interpreter(InterpreterBase):
                     if var_name in self.env_stack[-1][-i] and not found:
                         found = True
                         ptr = self.env_stack[-1][-i][var_name][0]
+                        struct_type = self.env_stack[-1][-i][var_name][1]
                         #print(ptr)
                         if isinstance(ptr, int) or isinstance(ptr, str) or isinstance(ptr, bool):
                             super().error(
@@ -266,7 +267,13 @@ class Interpreter(InterpreterBase):
                                 ErrorType.FAULT_ERROR,
                                 f"Nullptr access: {var_name}",
                             )
-                        return ptr[0][field_name][0]
+                        if field_name in self.struct_LUT[struct_type]:
+                            return ptr[0][field_name][0]
+                        else:
+                            super().error(
+                                ErrorType.NAME_ERROR,
+                                f"Undefined field: {field_name}",
+                            )
                 else:
                     if var in self.env_stack[-1][-i]:
                         found = True
@@ -553,6 +560,11 @@ class Interpreter(InterpreterBase):
         elif statement.elem_type == 'if':
             cond = statement.dict['condition']
             cond = self.eval_expr(cond)
+            if isinstance(cond,int):
+                if cond == 0:
+                    cond = False
+                else:
+                    cond = True
             if isinstance(cond,bool):
                 if cond:
                     self.env_stack[-1].append(dict())
@@ -582,6 +594,11 @@ class Interpreter(InterpreterBase):
             update =statement.dict['update']
             statements = statement.dict['statements']
             while(status := self.eval_expr(cond)):
+                if isinstance(status,int):
+                    if status == 0:
+                        status = False
+                    else:
+                        status = True
                 if not isinstance(status, bool):
                     super().error(
                     ErrorType.TYPE_ERROR,
@@ -647,24 +664,15 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-    
-
-struct person {
+struct cat {
   name: string;
-  age: int;
 }
 
 func main() : void {
-  var p: person;
-  var q: person;
-  p = nil;
-  q = new person;
-
-  print(p == nil); 
-  print(q == nil);  
+  var c: cat;
+  c = new cat;
+  print(c.age); 
 }
-
-    
 
     """
 
