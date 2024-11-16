@@ -98,6 +98,8 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '==':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            op1Type = self.determine_type(op1)
+            op2Type = self.determine_type(op2)
             if isinstance(op1, bool) or isinstance(op2, bool):
                 if isinstance(op1,int):
                     if op1 == 0:
@@ -130,6 +132,11 @@ class Interpreter(InterpreterBase):
                     ErrorType.TYPE_ERROR,
                     "Incompatible types for == operation",
                 )
+            elif (op1 == self.Nil() and (op2Type == "int" or op2Type == "bool" or op2Type == "string")) or (op2 == self.Nil() and (op1Type == "int" or op1Type == "bool" or op1Type == "string")):
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Incompatible types for == operation",
+                )
             elif op1 == self.Nil() and op2[1] in self.valid_types or op2== self.Nil() and op1[1] in self.valid_types:
                 return (op1 == op2)
             else:
@@ -140,6 +147,8 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '!=':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            op1Type = self.determine_type(op1)
+            op2Type = self.determine_type(op2)
             if isinstance(op1, bool) or isinstance(op2, bool):
                 if isinstance(op1,int):
                     if op1 == 0:
@@ -169,6 +178,11 @@ class Interpreter(InterpreterBase):
                     return True
                 else:
                     super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Incompatible types for == operation",
+                )
+            elif (op1 == self.Nil() and (op2Type == "int" or op2Type == "bool" or op2Type == "string")) or (op2 == self.Nil() and (op1Type == "int" or op1Type == "bool" or op1Type == "string")):
+                super().error(
                     ErrorType.TYPE_ERROR,
                     "Incompatible types for == operation",
                 )
@@ -702,18 +716,9 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-struct cat {
-  name: string;
-}
-
-struct dog {
-  name: string;
-}
-
 func main() : void {
-  var d: dog;
-  var c: dog;
-  print(nil == c);
+  var n: int;
+  print(nil == n);
 }
     """
 
