@@ -311,6 +311,8 @@ class Interpreter(InterpreterBase):
             for arg in args:
                 #print(arg)
                 eval_result = self.eval_expr(arg)
+                if isinstance(eval_result,list) and eval_result[0] == self.Nil():
+                    eval_result = self.Nil()
                 #print(type(eval_result))
                 if eval_result != self.Void():
                     curr = str(eval_result)
@@ -387,10 +389,10 @@ class Interpreter(InterpreterBase):
                         # execution
                         funcRetType = func.dict['return_type']
                         for statement in func.dict['statements']:
-                            exec_result = self.exec_statment(statement)
+                            exec_result = self.exec_statment(statement,funcRetType)
                             if(exec_result!= None):
                                 if funcRetType != "void":
-                                    self.env_stack.pop()
+                                    #self.env_stack.pop()
                                     actualRetType = self.determine_type(exec_result)
                                     #print(funcRetType)
                                     #print(actualRetType)
@@ -424,13 +426,13 @@ class Interpreter(InterpreterBase):
                         elif funcRetType == "void":
                             return self.Void()
                         else:
-                            return self.Nil()
+                            return [self.Nil(),funcRetType] ##Returns nullptr for struct
             if not found:
                 super().error(
                     ErrorType.NAME_ERROR,
                     f"No corrsponding function: {funcName} found",
                 )
-    def exec_statment(self, statement):
+    def exec_statment(self, statement, funcRetType = None):
         if statement.elem_type == 'vardef':
             #print(statement.dict['name'])
             var = statement.dict['name']
@@ -517,7 +519,7 @@ class Interpreter(InterpreterBase):
                 if cond:
                     self.env_stack[-1].append(dict())
                     for statement in statement.dict['statements']:
-                        result = self.exec_statment(statement)
+                        result = self.exec_statment(statement,funcRetType)
                         if result != None:
                             return result
                     self.env_stack[-1].pop()
@@ -526,7 +528,7 @@ class Interpreter(InterpreterBase):
                         self.env_stack[-1].append(dict())
                         for statement in statement.dict['else_statements']:
                             #self.exec_statment(statement)
-                            result = self.exec_statment(statement)
+                            result = self.exec_statment(statement,funcRetType)
                             if result != None:
                                 return result
                         self.env_stack[-1].pop()
@@ -537,7 +539,7 @@ class Interpreter(InterpreterBase):
                 )
         elif statement.elem_type == 'for':
             init=statement.dict['init']
-            self.exec_statment(init)
+            self.exec_statment(init,funcRetType)
             cond = statement.dict['condition']
             update =statement.dict['update']
             statements = statement.dict['statements']
@@ -549,17 +551,27 @@ class Interpreter(InterpreterBase):
                 )
                 self.env_stack[-1].append(dict())
                 for statement in statements:
-                    result = self.exec_statment(statement)
+                    result = self.exec_statment(statement,funcRetType)
                     if result != None:
                         return result
                 self.env_stack[-1].pop()
-                self.exec_statment(update)
+                self.exec_statment(update,funcRetType)
         elif statement.elem_type == 'return':
             expr = statement.dict['expression']
             if expr == None:
-                return self.Nil()
+                if funcRetType == "int":
+                    return 0
+                elif funcRetType == "bool":
+                    return False
+                elif funcRetType == "string":
+                    return ""
+                elif funcRetType == "void":
+                    return self.Void()
+                else:
+                    return [self.Nil(),funcRetType]
             else:
-                return self.eval_expr(expr)
+                retVal = self.eval_expr(expr)
+                return retVal
         else:
             pass
 
@@ -598,22 +610,9 @@ class Interpreter(InterpreterBase):
 if __name__ == '__main__':
     program_source = """
     
-struct person {
-  name: string;
-  age: int;
-}
-
-func foo(x:person) void{
-    print(x.age);
-}
 
 func main() : void {
-  var y: person;
-  y = new person;
-  var x: int;
-  y.age = x;
-  y.name = "hi";
-  foo(y);
+   var val: int;
 }
     
 
