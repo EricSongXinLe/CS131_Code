@@ -411,7 +411,7 @@ class Interpreter(InterpreterBase):
                                             ErrorType.TYPE_ERROR,
                                             f"fcall return type wrong!",
                                         )
-                                elif exec_result != self.Nil():
+                                elif exec_result != self.Void():
                                     super().error(
                                         ErrorType.TYPE_ERROR,
                                         f"void function should not return!",
@@ -611,8 +611,12 @@ if __name__ == '__main__':
     program_source = """
     
 
+func bar() : void{
+  return;
+}
+
 func main() : void {
-   var val: int;
+  bar();
 }
     
 
