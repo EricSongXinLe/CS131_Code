@@ -679,6 +679,14 @@ class Interpreter(InterpreterBase):
                     return [self.Nil(funcRetType),funcRetType]
             else:
                 retVal = self.eval_expr(expr)
+                if retVal == self.Nil():
+                    if funcRetType != "int" and funcRetType != "bool" and funcRetType != "string":
+                        retVal.Niltype = funcRetType
+                    else:
+                        super().error(
+                        ErrorType.TYPE_ERROR,
+                        "Illegally returning Nil",
+                    )
                 return retVal
         else:
             pass
@@ -717,8 +725,12 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
+func bad_nil_return() : int {
+  return nil;  
+}
+
 func main() : void {
-  print(nil == print("Hello")); 
+  print(bad_nil_return());
 }
     """
 
