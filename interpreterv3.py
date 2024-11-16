@@ -281,7 +281,13 @@ class Interpreter(InterpreterBase):
             return self.Nil()
         elif expr.elem_type == 'fcall':
             func = expr.dict['name']
-            return self.func_call(func,expr.dict['args'] )
+            ret = self.func_call(func,expr.dict['args'] )
+            if isinstance(ret,self.Void):
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Must not use void func in expression",
+                ) 
+            return ret
         elif expr.elem_type == 'new':
             var_type = expr.dict['var_type']
             if var_type in self.valid_types:
@@ -616,7 +622,8 @@ func bar() : void{
 }
 
 func main() : void {
-  bar();
+  var x:int;
+  x = bar();
 }
     
 
