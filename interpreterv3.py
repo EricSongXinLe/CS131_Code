@@ -25,6 +25,8 @@ class Interpreter(InterpreterBase):
             return "bool"
         elif isinstance(var, str):
             return "string"
+        elif isinstance(var, list):
+            return var[1]
         
     def eval_expr(self, expr):
         if expr.elem_type == '+':
@@ -230,10 +232,16 @@ class Interpreter(InterpreterBase):
             stack_depth = len(self.env_stack[-1])
             found = False
             for i in range(1,stack_depth+1):
-                if var in self.env_stack[-1][-i]:
-                    found = True
-                    return self.env_stack[-1][-i][var][0] #var found in current scope
-                #not found, go to previous stack.
+                if "." in var: #STRUCT
+                    var_name, field_name = var.split('.')
+                    if var_name in self.env_stack[-1][-i] and not found:
+                        found = True
+                        return self.env_stack[-1][-i][var_name][0][0][field_name][0]
+                else:
+                    if var in self.env_stack[-1][-i]:
+                        found = True
+                        return self.env_stack[-1][-i][var][0] #var found in current scope
+                    #not found, go to previous stack.
             if(not found):
                 super().error(
                     ErrorType.NAME_ERROR,
@@ -274,6 +282,28 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == 'fcall':
             func = expr.dict['name']
             return self.func_call(func,expr.dict['args'] )
+        elif expr.elem_type == 'new':
+            var_type = expr.dict['var_type']
+            if var_type in self.valid_types:
+                structure = self.struct_LUT[var_type] #a dict of how the struct should look like
+                #print(structure)
+                struct_dict = {}
+                for field in structure:
+                    field_type = structure[field]
+                    if field_type == "int":
+                        struct_dict[field] = [0,field_type]
+                    elif field_type == "string":
+                        struct_dict[field] = ["",field_type]
+                    elif field_type =="bool":
+                        struct_dict[field] = [False,field_type]
+                    elif field_type in self.valid_types:
+                        struct_dict[field] = [self.Nil(),field_type]
+                return [struct_dict,var_type]
+            else:
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    f"Invalid type {var_type} for new operation",
+                )
     
     def func_call(self, funcName, args):
         if funcName == 'print':
@@ -430,24 +460,49 @@ class Interpreter(InterpreterBase):
             stack_depth = len(self.env_stack[-1])
             found = False
             for i in range(1,stack_depth+1):
-                if var in self.env_stack[-1][-i] and not found:
-                    found = True
-                    val = self.eval_expr(statement.dict['expression'])
-                    valType = self.determine_type(val)
-                    varType = self.env_stack[-1][-i][var][1]
-                    if valType ==varType:
-                        self.env_stack[-1][-i][var] = [val,valType]
-                    elif valType == "int" and varType == "bool":
-                        if val == 0:
-                            val = False
+                if "." in var:
+                    var_name, field_name = var.split('.')
+                    #print(var_name,field_name)
+                    if var_name in self.env_stack[-1][-i] and not found:
+                        found = True
+                        val = self.eval_expr(statement.dict['expression'])
+                        valType = self.determine_type(val)
+                        #print(self.env_stack[-1][-i][var_name][0][0])
+                        varType = self.env_stack[-1][-i][var_name][0][0][field_name][1]
+                        if valType ==varType:
+                            self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
+                        elif valType == "int" and varType == "bool":
+                            if val == 0:
+                                val = False
+                            else:
+                                val = True
+                            self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
+                        
                         else:
-                            val = True
-                        self.env_stack[-1][-i][var] = [val,valType]
-                    else:
-                        super().error(
-                            ErrorType.TYPE_ERROR,
-                            f"var assignment Type not match",
-                        )
+                            super().error(
+                                ErrorType.TYPE_ERROR,
+                                f"var assignment Type not match",
+                            )
+                        #print(self.env_stack[-1][-i][var_name][0][0])
+                else:
+                    if var in self.env_stack[-1][-i] and not found:
+                        found = True
+                        val = self.eval_expr(statement.dict['expression'])
+                        valType = self.determine_type(val)
+                        varType = self.env_stack[-1][-i][var][1]
+                        if valType ==varType:
+                            self.env_stack[-1][-i][var] = [val,valType]
+                        elif valType == "int" and varType == "bool":
+                            if val == 0:
+                                val = False
+                            else:
+                                val = True
+                            self.env_stack[-1][-i][var] = [val,valType]
+                        else:
+                            super().error(
+                                ErrorType.TYPE_ERROR,
+                                f"var assignment Type not match",
+                            )
             if(not found): #still not found??
                 super().error(
                 ErrorType.NAME_ERROR,
@@ -547,13 +602,19 @@ struct person {
   name: string;
   age: int;
 }
-struct d{
-age: person;
+
+func foo(x:person) void{
+    print(x.age);
 }
 
-    func main() : void {
-    var x: df;
-    }
+func main() : void {
+  var y: person;
+  y = new person;
+  var x: int;
+  y.age = x;
+  y.name = "hi";
+  foo(y);
+}
     
 
     """
