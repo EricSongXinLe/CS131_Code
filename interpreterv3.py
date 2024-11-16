@@ -108,7 +108,10 @@ class Interpreter(InterpreterBase):
                     else:
                         op2 = True                    
             if type(op1) == type(op2):
-                return (op1 == op2)
+                if isinstance(op1, list):
+                    return op1[0] is op2[0]
+                else:
+                    return (op1 == op2)
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -129,7 +132,10 @@ class Interpreter(InterpreterBase):
                     else:
                         op2 = True        
             if type(op1) == type(op2):
-                return (op1 != op2)
+                if isinstance(op1, list):
+                    return op1[0] is not op2[0]
+                else:
+                    return (op1 != op2)
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -241,7 +247,7 @@ class Interpreter(InterpreterBase):
             found = False
             for i in range(1,stack_depth+1):
                 if "." in var: #STRUCT
-                    var_name, field_name = var.split('.')
+                    var_name, field_name = var.split('.',1)
                     if var_name in self.env_stack[-1][-i] and not found:
                         found = True
                         ptr = self.env_stack[-1][-i][var_name][0]
@@ -639,16 +645,20 @@ if __name__ == '__main__':
     program_source = """
     
 
-struct s {
-  a:int;
+struct cat {
+  name: string;
+  age: int;
 }
 
-func main() : int {
-  var x: s;
-  x = new s;
-  x = nil;
-  print(x.a);
-}   
+func main() : void {
+  var c1: cat;
+  var c2: cat;
+  c1 = new cat;
+  c2 = new cat;
+
+  print(c1 == c2);  
+}
+
     
 
     """
