@@ -112,6 +112,8 @@ class Interpreter(InterpreterBase):
                     return op1[0] is op2[0]
                 else:
                     return (op1 == op2)
+            elif op1 == self.Nil() and op2[1] in self.valid_types or op2== self.Nil() and op1[1] in self.valid_types:
+                return (op1 == op2)
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -136,6 +138,8 @@ class Interpreter(InterpreterBase):
                     return op1[0] is not op2[0]
                 else:
                     return (op1 != op2)
+            elif op1 == self.Nil() and op2[1] in self.valid_types or op2== self.Nil() and op1[1] in self.valid_types:
+                return (op1 != op2)
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -645,18 +649,19 @@ if __name__ == '__main__':
     program_source = """
     
 
-struct cat {
+struct person {
   name: string;
   age: int;
 }
 
 func main() : void {
-  var c1: cat;
-  var c2: cat;
-  c1 = new cat;
-  c2 = new cat;
+  var p: person;
+  var q: person;
+  p = nil;
+  q = new person;
 
-  print(c1 == c2);  
+  print(p == nil); 
+  print(q == nil);  
 }
 
     
