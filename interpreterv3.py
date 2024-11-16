@@ -4,6 +4,8 @@ from brewparse import parse_program
 
 class Interpreter(InterpreterBase):
     class Nil:
+        def __init__(self, Niltype = "Nil"):
+            self.Niltype=Niltype
         def __eq__(self, other):
             return isinstance(other,Interpreter.Nil)
         def __str__(self):
@@ -107,11 +109,27 @@ class Interpreter(InterpreterBase):
                         op2 = False
                     else:
                         op2 = True                    
-            if type(op1) == type(op2):
+            if type(op1) == type(op2) and op1 != self.Nil():
                 if isinstance(op1, list):
-                    return op1[0] is op2[0]
+                    if op1[1] == op2[1]:
+                        return op1[0] is op2[0] #same Type
+                    else:
+                            super().error( #diff type, error!
+                        ErrorType.TYPE_ERROR,
+                        "Incompatible types for == operation",
+                    )
                 else:
                     return (op1 == op2)
+            elif op1 == self.Nil() and op2 == self.Nil():
+                if op1.Niltype == op2.Niltype:
+                    return True
+                elif op1.Niltype == "Nil" or op2.Niltype == "Nil":
+                    return True
+                else:
+                    super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Incompatible types for == operation",
+                )
             elif op1 == self.Nil() and op2[1] in self.valid_types or op2== self.Nil() and op1[1] in self.valid_types:
                 return (op1 == op2)
             else:
@@ -133,11 +151,27 @@ class Interpreter(InterpreterBase):
                         op2 = False
                     else:
                         op2 = True        
-            if type(op1) == type(op2):
+            if type(op1) == type(op2) and op1 != self.Nil():
                 if isinstance(op1, list):
-                    return op1[0] is not op2[0]
+                    if op1[1] == op2[1]:
+                        return op1[0] is not op2[0] #same Type
+                    else:
+                            super().error( #diff type, error!
+                        ErrorType.TYPE_ERROR,
+                        "Incompatible types for == operation",
+                    )
                 else:
                     return (op1 != op2)
+            elif op1 == self.Nil() and op2 == self.Nil():
+                if op1.Niltype == op2.Niltype:
+                    return False
+                elif op1.Niltype == "Nil" or op2.Niltype == "Nil":
+                    return True
+                else:
+                    super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Incompatible types for == operation",
+                )
             elif op1 == self.Nil() and op2[1] in self.valid_types or op2== self.Nil() and op1[1] in self.valid_types:
                 return (op1 != op2)
             else:
@@ -340,7 +374,7 @@ class Interpreter(InterpreterBase):
                     elif field_type =="bool":
                         struct_dict[field] = [False,field_type]
                     elif field_type in self.valid_types:
-                        struct_dict[field] = [self.Nil(),field_type]
+                        struct_dict[field] = [self.Nil(field_type),field_type]
                 return [struct_dict,var_type]
             else:
                 super().error(
@@ -469,7 +503,7 @@ class Interpreter(InterpreterBase):
                         elif funcRetType == "void":
                             return self.Void()
                         else:
-                            return [self.Nil(),funcRetType] ##Returns nullptr for struct
+                            return [self.Nil(funcRetType),funcRetType] ##Returns nullptr for struct
             if not found:
                 super().error(
                     ErrorType.NAME_ERROR,
@@ -492,7 +526,7 @@ class Interpreter(InterpreterBase):
             elif varType =="bool":
                 self.env_stack[-1][-1][var] = [False,varType]
             elif varType in self.valid_types:
-                self.env_stack[-1][-1][var] = [self.Nil(),varType]
+                self.env_stack[-1][-1][var] = [self.Nil(varType),varType]
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -627,7 +661,7 @@ class Interpreter(InterpreterBase):
                 elif funcRetType == "void":
                     return self.Void()
                 else:
-                    return [self.Nil(),funcRetType]
+                    return [self.Nil(funcRetType),funcRetType]
             else:
                 retVal = self.eval_expr(expr)
                 return retVal
@@ -668,13 +702,18 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-struct s {
-  a:int;
+struct cat {
+  name: string;
 }
 
-func main() : int {
-  var x: s;
-  x.a = 10; 
+struct dog {
+  name: string;
+}
+
+func main() : void {
+  var d: dog;
+  var c: dog;
+  print(nil == c);
 }
     """
 
