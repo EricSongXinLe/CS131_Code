@@ -108,7 +108,10 @@ class Interpreter(InterpreterBase):
             if type(op1) == type(op2):
                 return (op1 == op2)
             else:
-                return False
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for == operation",
+            )
         elif expr.elem_type == '!=':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
@@ -126,7 +129,10 @@ class Interpreter(InterpreterBase):
             if type(op1) == type(op2):
                 return (op1 != op2)
             else:
-                return True
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for == operation",
+            )
         elif expr.elem_type == '<':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
@@ -236,7 +242,19 @@ class Interpreter(InterpreterBase):
                     var_name, field_name = var.split('.')
                     if var_name in self.env_stack[-1][-i] and not found:
                         found = True
-                        return self.env_stack[-1][-i][var_name][0][0][field_name][0]
+                        ptr = self.env_stack[-1][-i][var_name][0]
+                        #print(ptr)
+                        if isinstance(ptr, int) or isinstance(ptr, str) or isinstance(ptr, bool):
+                            super().error(
+                                ErrorType.TYPE_ERROR,
+                                f"NOT A Struct!: {var_name}",
+                            )
+                        if isinstance(ptr,self.Nil):
+                            super().error(
+                                ErrorType.FAULT_ERROR,
+                                f"Nullptr access: {var_name}",
+                            )
+                        return ptr[0][field_name][0]
                 else:
                     if var in self.env_stack[-1][-i]:
                         found = True
@@ -617,13 +635,28 @@ if __name__ == '__main__':
     program_source = """
     
 
-func bar() : void{
-  return;
+struct person {
+  name: string;
+  age: int;
+}
+
+func foo(a:int, b: person) : void {
+  a = 10;
+  b.age = b.age + 1;  /* changes p.age from 18 to 19 */
+
+  b = new person;  /* this changes local b variable, not p var below */
+  b.age = 100;     /* this does NOT change the p.age field below */
 }
 
 func main() : void {
-  var x:int;
-  x = bar();
+  var x: int;
+  x = 5;
+  var p:person;
+  p = new person;
+  p.age = 18;
+  foo(x, p);
+  print(x);      /* prints 5, since x is passed by value */
+  print(p.age);  /* prints 19, since p is passed by object reference */
 }
     
 
