@@ -418,6 +418,7 @@ class Interpreter(InterpreterBase):
                 f"void not allows as parameter",
                 )
             super().output(outstr)
+            return self.Void()
         elif funcName == 'inputi':
             if len(args) > 1:
                 super().error(
@@ -717,8 +718,7 @@ class Interpreter(InterpreterBase):
 if __name__ == '__main__':
     program_source = """
 func main() : void {
-  var n: int;
-  print(nil == n);
+  print(nil == print("Hello")); 
 }
     """
 
