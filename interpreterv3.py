@@ -27,6 +27,8 @@ class Interpreter(InterpreterBase):
             return "string"
         elif isinstance(var, list):
             return var[1]
+        else:
+            return self.Nil ##Nil Type
         
     def eval_expr(self, expr):
         if expr.elem_type == '+':
@@ -516,6 +518,8 @@ class Interpreter(InterpreterBase):
                         val = self.eval_expr(statement.dict['expression'])
                         valType = self.determine_type(val)
                         varType = self.env_stack[-1][-i][var][1]
+                        if valType == self.Nil:
+                            valType = varType
                         if valType ==varType:
                             self.env_stack[-1][-i][var] = [val,valType]
                         elif valType == "int" and varType == "bool":
@@ -635,29 +639,16 @@ if __name__ == '__main__':
     program_source = """
     
 
-struct person {
-  name: string;
-  age: int;
+struct s {
+  a:int;
 }
 
-func foo(a:int, b: person) : void {
-  a = 10;
-  b.age = b.age + 1;  /* changes p.age from 18 to 19 */
-
-  b = new person;  /* this changes local b variable, not p var below */
-  b.age = 100;     /* this does NOT change the p.age field below */
-}
-
-func main() : void {
-  var x: int;
-  x = 5;
-  var p:person;
-  p = new person;
-  p.age = 18;
-  foo(x, p);
-  print(x);      /* prints 5, since x is passed by value */
-  print(p.age);  /* prints 19, since p is passed by object reference */
-}
+func main() : int {
+  var x: s;
+  x = new s;
+  x = nil;
+  print(x.a);
+}   
     
 
     """
