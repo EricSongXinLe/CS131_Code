@@ -506,13 +506,17 @@ class Interpreter(InterpreterBase):
             found = False
             for i in range(1,stack_depth+1):
                 if "." in var:
-                    var_name, field_name = var.split('.')
+                    var_name, field_name = var.split('.',1)
                     #print(var_name,field_name)
                     if var_name in self.env_stack[-1][-i] and not found:
                         found = True
                         val = self.eval_expr(statement.dict['expression'])
                         valType = self.determine_type(val)
-                        #print(self.env_stack[-1][-i][var_name][0][0])
+                        if isinstance(self.env_stack[-1][-i][var_name][0],self.Nil):
+                            super().error(
+                                ErrorType.FAULT_ERROR,
+                                f"Nil access! {var_name}",
+                            )
                         varType = self.env_stack[-1][-i][var_name][0][0][field_name][1]
                         if valType ==varType:
                             self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
@@ -664,16 +668,14 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-struct cat {
-  name: string;
+struct s {
+  a:int;
 }
 
-func main() : void {
-  var c: cat;
-  c = new cat;
-  print(c.age); 
+func main() : int {
+  var x: s;
+  x.a = 10; 
 }
-
     """
 
     inter = Interpreter()
