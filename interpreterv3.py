@@ -798,6 +798,16 @@ class Interpreter(InterpreterBase):
                     )
         #print(self.struct_LUT)
         #print(self.valid_types)
+    def check_func_ret_type(self,funcs):
+        for func in funcs:
+            retType = func.dict['return_type']
+            if retType == "void" or retType in self.valid_types:
+                pass
+            else:
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    f"invalid return type! {retType} in {func}",
+                )
     def run(self, program):
         ast = parse_program(program)
         self.env_stack = []
@@ -808,7 +818,7 @@ class Interpreter(InterpreterBase):
         structs = ast.dict['structs']
         self.process_structs(structs)
         self.funcs = ast.dict['functions']
-
+        self.check_func_ret_type(self.funcs)
         self.func_call("main",[])
     
     
@@ -819,10 +829,11 @@ struct a {
 }
 
 func main() : void {
+  print("fj");
   foo(nil);
 }
 
-func foo(a : a) : void {
+func foo(a : a) : vofid {
   print("hi");
 }
 
