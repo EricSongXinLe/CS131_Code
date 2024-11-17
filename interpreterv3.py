@@ -298,7 +298,7 @@ class Interpreter(InterpreterBase):
             stack_depth = len(self.env_stack[-1])
             found = False
             for i in range(1,stack_depth+1):
-                if "." in var: #STRUCT
+                if var.count(".") == 1: #STRUCT
                     var_name, field_name = var.split('.',1)
                     if var_name in self.env_stack[-1][-i] and not found:
                         found = True
@@ -322,6 +322,38 @@ class Interpreter(InterpreterBase):
                                 ErrorType.NAME_ERROR,
                                 f"Undefined field: {field_name}",
                             )
+                elif var.count(".") >= 1:
+                    dotList = var.split('.')
+                    ptr = self.env_stack[-1][-i]
+                    while (not found):
+                        if dotList[0] in ptr:
+                            ptr = ptr[dotList[0]]
+                            struct_type = ptr[1]
+                            ptr = ptr[0]
+                            #print(ptr)
+                            if isinstance(ptr, int) or isinstance(ptr, str) or isinstance(ptr, bool):
+                                super().error(
+                                    ErrorType.TYPE_ERROR,
+                                    f"NOT A Struct!: {dotList[0]}",
+                                )
+                            if isinstance(ptr,self.Nil):
+                                super().error(
+                                    ErrorType.FAULT_ERROR,
+                                    f"Nullptr access: {dotList[0]}",
+                                )
+                            if dotList[1] in self.struct_LUT[struct_type] and len(dotList) == 2:
+                                found = True
+                                if isinstance(ptr[0],list):
+                                    return ptr[0][0][dotList[1]][0][0]
+                                else:
+                                    return ptr[0][dotList[1]][0][0]
+                            elif dotList[1] not in self.struct_LUT[struct_type]:
+                                super().error(
+                                    ErrorType.NAME_ERROR,
+                                    f"Undefined field: {dotList[1]}",
+                                )
+                        ptr = ptr[0]
+                        del dotList[0]
                 else:
                     if var in self.env_stack[-1][-i]:
                         found = True
@@ -554,7 +586,7 @@ class Interpreter(InterpreterBase):
             stack_depth = len(self.env_stack[-1])
             found = False
             for i in range(1,stack_depth+1):
-                if "." in var:
+                if var.count(".") == 1:
                     var_name, field_name = var.split('.',1)
                     #print(var_name,field_name)
                     if var_name in self.env_stack[-1][-i] and not found:
@@ -587,6 +619,40 @@ class Interpreter(InterpreterBase):
                                     f"field {field_name} does not exist",
                                 )
                         #print(self.env_stack[-1][-i][var_name][0][0])
+                elif var.count(".") >= 1:
+                    dotList = var.split('.')
+                    ptr = self.env_stack[-1][-i]
+                    while (not found):
+                        if dotList[0] in ptr:
+                            ptr = ptr[dotList[0]]
+                            struct_type = ptr[1]
+                            ptr = ptr[0]
+                            #print(ptr)
+                            if isinstance(ptr, int) or isinstance(ptr, str) or isinstance(ptr, bool):
+                                super().error(
+                                    ErrorType.TYPE_ERROR,
+                                    f"NOT A Struct!: {dotList[0]}",
+                                )
+                            if isinstance(ptr,self.Nil):
+                                super().error(
+                                    ErrorType.FAULT_ERROR,
+                                    f"Nullptr access: {dotList[0]}",
+                                )
+                            if dotList[1] in self.struct_LUT[struct_type] and len(dotList) == 2:
+                                val = self.eval_expr(statement.dict['expression'])
+                                valType = self.determine_type(val)
+                                found = True
+                                if isinstance(ptr[0],list):
+                                    ptr[0][0][dotList[1]][0] = [val,valType]
+                                else:
+                                    ptr[0][dotList[1]][0] = [val,valType]
+                            elif dotList[1] not in self.struct_LUT[struct_type]:
+                                super().error(
+                                    ErrorType.NAME_ERROR,
+                                    f"Undefined field: {dotList[1]}",
+                                )
+                        ptr = ptr[0]
+                        del dotList[0]
                 else:
                     if var in self.env_stack[-1][-i] and not found:
                         found = True
@@ -730,17 +796,31 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-struct cat{
-age:int;
-}
-struct dog{
-c:cat;
+struct ant {
+ i:int;
 }
 
-func main() : void {
-var x:dog;
-x = new dog;
-x.a = 1;
+struct bat {
+ a:ant;
+}
+
+struct cat {
+ b:bat;
+}
+
+struct dog {
+ c:cat;
+}
+
+func main() : int {
+  var d: dog; 
+  d = new dog;
+  d.c = new cat;
+  d.c.b = new bat;
+  d.c.b.a = new ant;
+
+  d.c.b.a.i = 15;
+  print(d.c.b.a.i);
 }
     """
 
