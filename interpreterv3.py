@@ -566,21 +566,26 @@ class Interpreter(InterpreterBase):
                                 ErrorType.FAULT_ERROR,
                                 f"Nil access! {var_name}",
                             )
-                        varType = self.env_stack[-1][-i][var_name][0][0][field_name][1]
-                        if valType ==varType:
-                            self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
-                        elif valType == "int" and varType == "bool":
-                            if val == 0:
-                                val = False
+                        if field_name in self.env_stack[-1][-i][var_name][0][0]:
+                            varType = self.env_stack[-1][-i][var_name][0][0][field_name][1]
+                            if valType ==varType:
+                                self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
+                            elif valType == "int" and varType == "bool":
+                                if val == 0:
+                                    val = False
+                                else:
+                                    val = True
+                                self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
                             else:
-                                val = True
-                            self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
-                        
+                                super().error(
+                                    ErrorType.TYPE_ERROR,
+                                    f"var assignment Type not match",
+                                )
                         else:
                             super().error(
-                                ErrorType.TYPE_ERROR,
-                                f"var assignment Type not match",
-                            )
+                                    ErrorType.NAME_ERROR,
+                                    f"field {field_name} does not exist",
+                                )
                         #print(self.env_stack[-1][-i][var_name][0][0])
                 else:
                     if var in self.env_stack[-1][-i] and not found:
@@ -725,12 +730,17 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-func bad_nil_return() : int {
-  return nil;  
+struct cat{
+age:int;
+}
+struct dog{
+c:cat;
 }
 
 func main() : void {
-  print(bad_nil_return());
+var x:dog;
+x = new dog;
+x.a = 1;
 }
     """
 
