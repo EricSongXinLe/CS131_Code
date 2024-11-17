@@ -662,13 +662,13 @@ class Interpreter(InterpreterBase):
                         if valType == self.Nil:
                             valType = varType
                         if valType ==varType:
-                            self.env_stack[-1][-i][var] = [val,valType]
+                            self.env_stack[-1][-i][var][0] = val
                         elif valType == "int" and varType == "bool":
                             if val == 0:
                                 val = False
                             else:
                                 val = True
-                            self.env_stack[-1][-i][var] = [val,valType]
+                            self.env_stack[-1][-i][var][0] = val
                         else:
                             super().error(
                                 ErrorType.TYPE_ERROR,
