@@ -29,6 +29,8 @@ class Interpreter(InterpreterBase):
             return "string"
         elif isinstance(var, list):
             return var[1]
+        elif isinstance(var,self.Nil):
+            return var.Niltype
         else:
             return self.Nil ##Nil Type
         
@@ -509,6 +511,7 @@ class Interpreter(InterpreterBase):
                                     
                         # execution
                         funcRetType = func.dict['return_type']
+                        #print(funcRetType)
                         for statement in func.dict['statements']:
                             exec_result = self.exec_statment(statement,funcRetType)
                             if(exec_result!= None):
@@ -656,8 +659,9 @@ class Interpreter(InterpreterBase):
                         val = self.eval_expr(statement.dict['expression'])
                         valType = self.determine_type(val)
                         varType = self.env_stack[-1][-i][var][1]
-                        if valType == self.Nil:
+                        if valType == "Nil":
                             valType = varType
+                            val.Niltype = valType
                         if valType ==varType:
                             self.env_stack[-1][-i][var][0] = val
                         elif valType == "int" and varType == "bool":
@@ -734,28 +738,34 @@ class Interpreter(InterpreterBase):
                 self.exec_statment(update,funcRetType)
         elif statement.elem_type == 'return':
             expr = statement.dict['expression']
-            if expr == None:
-                if funcRetType == "int":
-                    return 0
-                elif funcRetType == "bool":
-                    return False
-                elif funcRetType == "string":
-                    return ""
-                elif funcRetType == "void":
-                    return self.Void()
-                else:
-                    return [self.Nil(funcRetType),funcRetType]
-            else:
-                retVal = self.eval_expr(expr)
-                if retVal == self.Nil():
-                    if funcRetType != "int" and funcRetType != "bool" and funcRetType != "string":
-                        retVal.Niltype = funcRetType
+            if funcRetType == None or funcRetType == "void" or funcRetType in self.valid_types:
+                if expr == None:
+                    if funcRetType == "int":
+                        return 0
+                    elif funcRetType == "bool":
+                        return False
+                    elif funcRetType == "string":
+                        return ""
+                    elif funcRetType == "void":
+                        return self.Void()
                     else:
-                        super().error(
-                        ErrorType.TYPE_ERROR,
-                        "Illegally returning Nil",
-                    )
-                return retVal
+                        return [self.Nil(funcRetType),funcRetType]
+                else:
+                    retVal = self.eval_expr(expr)
+                    if retVal == self.Nil():
+                        if funcRetType != "int" and funcRetType != "bool" and funcRetType != "string":
+                            retVal.Niltype = funcRetType
+                        else:
+                            super().error(
+                            ErrorType.TYPE_ERROR,
+                            "Illegally returning Nil",
+                        )
+                    return retVal
+            else:
+                super().error(
+                    ErrorType.TYPE_ERROR,
+                    "Illegal return type!",
+                )
         else:
             pass
 
@@ -793,32 +803,24 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-struct ant {
- i:int;
-}
-
-struct bat {
- a:ant;
-}
-
-struct cat {
- b:bat;
-}
-
 struct dog {
- c:cat;
+  breed: string;
 }
 
-func main() : int {
-  var d: dog; 
-  d = new dog;
-  d.c = new cat;
-  d.c.b = new bat;
-  d.c.b.a = new ant;
-
-  d.c.b.a.i = 15;
-  print(d.c.b.a.i);
+func try_modify(d: dog) : void {
+  if (d == nil) {
+    print("Nil reference");
+  } else {
+    d.breed = "Labrador";
+  }
 }
+
+func main() : void {
+  var myDog: dog;
+  myDog = nil;
+  try_modify(myDog);
+}
+
     """
 
     inter = Interpreter()
