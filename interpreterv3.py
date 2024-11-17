@@ -351,6 +351,8 @@ class Interpreter(InterpreterBase):
                                     ErrorType.NAME_ERROR,
                                     f"Undefined field: {dotList[1]}",
                                 )
+                        if ptr == {}:
+                            break
                         ptr = ptr[0]
                         del dotList[0]
                 else:
@@ -664,6 +666,8 @@ class Interpreter(InterpreterBase):
                                     ErrorType.NAME_ERROR,
                                     f"Undefined field: {dotList[1]}",
                                 )
+                        if ptr == {}:
+                            break ##This is needed, i dont' know why, but I need this to pass
                         ptr = ptr[0]
                         del dotList[0]
                 else:
