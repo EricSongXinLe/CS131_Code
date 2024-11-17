@@ -512,9 +512,12 @@ class Interpreter(InterpreterBase):
                         # execution
                         funcRetType = func.dict['return_type']
                         #print(funcRetType)
+                        returned = False
                         for statement in func.dict['statements']:
-                            exec_result = self.exec_statment(statement,funcRetType)
+                            if not returned:
+                                exec_result = self.exec_statment(statement,funcRetType)
                             if(exec_result!= None):
+                                returned = True
                                 if funcRetType != "void":
                                     #self.env_stack.pop()
                                     actualRetType = self.determine_type(exec_result)
@@ -803,18 +806,14 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-struct dog {
-  breed: string;
-}
+func main(): void {
+  print("a");
+  return;
 
-func get_dog() : dog {
-  return nil;
-}
 
-func main() : void {
-  var d: dog;
-  d = get_dog();
-  print(d == nil);
+  print("b");
+
+
 }
 
     """
