@@ -497,6 +497,8 @@ class Interpreter(InterpreterBase):
                                 calleevarType = calleeArg.dict['var_type']
                                 if callervarType == calleevarType:
                                     self.env_stack[-1][-1][calleeArg.dict['name']] = [callerVal,calleevarType] ##Finds the caller arg from prev stack, and copies it to the new stack.
+                                elif callervarType == "Nil" and (calleevarType != "int" and calleevarType != "bool" and calleevarType != "string" and calleevarType in self.valid_types):
+                                    self.env_stack[-1][-1][calleeArg.dict['name']] = [callerVal,calleevarType]
                                 elif callervarType == "int" and calleevarType == "bool":
                                     if callerVal == 0:
                                         callerVal = False
@@ -812,9 +814,16 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
+struct a {
+  name : string;
+}
+
 func main() : void {
-  var a : int;
-  a.b = 5;
+  foo(nil);
+}
+
+func foo(a : a) : void {
+  print("hi");
 }
 
     """
