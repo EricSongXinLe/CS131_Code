@@ -343,10 +343,7 @@ class Interpreter(InterpreterBase):
                                 )
                             if dotList[1] in self.struct_LUT[struct_type] and len(dotList) == 2:
                                 found = True
-                                if isinstance(ptr[0],list):
-                                    return ptr[0][0][dotList[1]][0][0]
-                                else:
-                                    return ptr[0][dotList[1]][0][0]
+                                return ptr[0][dotList[1]][0]
                             elif dotList[1] not in self.struct_LUT[struct_type]:
                                 super().error(
                                     ErrorType.NAME_ERROR,
@@ -601,13 +598,13 @@ class Interpreter(InterpreterBase):
                         if field_name in self.env_stack[-1][-i][var_name][0][0]:
                             varType = self.env_stack[-1][-i][var_name][0][0][field_name][1]
                             if valType ==varType:
-                                self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
+                                self.env_stack[-1][-i][var_name][0][0][field_name][0] = val
                             elif valType == "int" and varType == "bool":
                                 if val == 0:
                                     val = False
                                 else:
                                     val = True
-                                self.env_stack[-1][-i][var_name][0][0][field_name] = [val,valType]
+                                self.env_stack[-1][-i][var_name][0][0][field_name][0] = val
                             else:
                                 super().error(
                                     ErrorType.TYPE_ERROR,
@@ -642,10 +639,10 @@ class Interpreter(InterpreterBase):
                                 val = self.eval_expr(statement.dict['expression'])
                                 valType = self.determine_type(val)
                                 found = True
-                                if isinstance(ptr[0],list):
-                                    ptr[0][0][dotList[1]][0] = [val,valType]
-                                else:
-                                    ptr[0][dotList[1]][0] = [val,valType]
+                                #if isinstance(ptr[0],list):
+                                #    ptr[0][0][dotList[1]][0] = [val,valType]
+                                #else:
+                                ptr[0][dotList[1]][0] = val
                             elif dotList[1] not in self.struct_LUT[struct_type]:
                                 super().error(
                                     ErrorType.NAME_ERROR,
