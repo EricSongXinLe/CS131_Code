@@ -550,7 +550,7 @@ class Interpreter(InterpreterBase):
                         elif funcRetType == "void":
                             return self.Void()
                         else:
-                            return [self.Nil(funcRetType),funcRetType] ##Returns nullptr for struct
+                            return self.Nil(funcRetType) ##Returns nullptr for struct
             if not found:
                 super().error(
                     ErrorType.NAME_ERROR,
@@ -807,18 +807,14 @@ struct dog {
   breed: string;
 }
 
-func try_modify(d: dog) : void {
-  if (d == nil) {
-    print("Nil reference");
-  } else {
-    d.breed = "Labrador";
-  }
+func get_dog() : dog {
+  return nil;
 }
 
 func main() : void {
-  var myDog: dog;
-  myDog = nil;
-  try_modify(myDog);
+  var d: dog;
+  d = get_dog();
+  print(d == nil);
 }
 
     """
