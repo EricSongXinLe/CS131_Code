@@ -813,8 +813,8 @@ class Interpreter(InterpreterBase):
     def run(self, program):
         ast = parse_program(program)
         self.env_stack = []
-        self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
-        self.env_stack[-1].append(dict())
+        #self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
+        #self.env_stack[-1].append(dict())
         self.valid_types = {"int","bool","string"} #Set
         self.struct_LUT = {} #Look Up Table for the struct structures. 
         structs = ast.dict['structs']
@@ -826,45 +826,110 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-struct list {
-    val: int;
-    next: list;
+struct maybe_int {
+  present : bool;
+  val : int;
 }
 
-func cons(val: int, l: list) : list {
-    var h: list;
-    h = new list;
-    h.val = val;
-    h.next = l;
-    return h;
+struct tree {
+  left : tree;
+  right : tree;
+  val : maybe_int;
 }
 
-func merge_lists(l1: list, l2: list) : list {
-    if (l1 == nil) {
-        return l2;
+func definitely_int(value : int) : maybe_int {
+  var ret : maybe_int;
+  ret = new maybe_int;
+  ret.present = true;
+  ret.val = value;
+  return ret;
+}
+
+func new_tree() : tree {
+  var ret : tree;
+  ret = new tree;
+  ret.val = new maybe_int;
+  return ret;
+}
+
+func new_tree(root : int) : tree {
+  var ret : tree;
+  ret = new tree;
+  ret.val = definitely_int(root);
+  return ret;
+}
+
+func insert_sorted(root: tree, value : int) : void {
+  if (!root.val.present) {
+    root.val = definitely_int(value);
+  } else {
+    if (value <= root.val.val) {
+      if (root.left == nil) {
+        root.left = new_tree(value);
+      } else {
+        insert_sorted(root.left, value);
+      }
+    } else {
+      if (root.right == nil) {
+        root.right = new_tree(value);
+      } else {
+        insert_sorted(root.right, value);
+      }
     }
-    l1.next = merge_lists(l1.next, l2);
-    return l1;
+  }
 }
 
-func print_list(l: list) : void {
-    var x: list;
-    for (x = l; x != nil; x = x.next) {
-        print(x.val);
+func get_size(root : tree) : int {
+  if (root == nil) {
+    return 0;
+  }
+  var sum : int;
+  if (root.val.present) {
+    sum = 1;
+  }
+  return sum + get_size(root.left) + get_size(root.right);
+}
+
+func get_item(root : tree, index : int) : maybe_int {
+  var offset : int;
+  offset = get_size(root.left);
+  if (index < offset) {
+    return get_item(root.left, index);
+  }
+  if (root.val.present) {
+    if (index == offset) {
+      return root.val;
     }
+    offset = offset + 1;
+  }
+  if (root.right == nil) {
+    return new maybe_int;
+  }
+  return get_item(root.right, index - offset);
 }
 
-func main() : void {
-    var l1: list;
-    var l2: list;
+func main () : void {
+  var list : tree;
+  list = new_tree();
+  insert_sorted(list, 5);
+  insert_sorted(list, 1);
+  insert_sorted(list, 3);
+  insert_sorted(list, 4);
+  insert_sorted(list, 11);
+  insert_sorted(list, 8);
+  insert_sorted(list, 6);
 
-    l1 = cons(3, cons(2, cons(1, nil)));
-    l2 = cons(6, cons(5, cons(4, nil)));
-
-    var merged: list;
-    merged = merge_lists(l1, l2);
-    print_list(merged);
+  var i : int;
+  for (i = 0; true; i = i + 1) {
+    var result : maybe_int;
+    result = get_item(list, i);
+    if (!result.present) {
+      return;
+    }
+    print(result.val);
+  }
 }
+
 
 
     """
