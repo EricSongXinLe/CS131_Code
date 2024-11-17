@@ -169,7 +169,7 @@ class Interpreter(InterpreterBase):
                     else:
                             super().error( #diff type, error!
                         ErrorType.TYPE_ERROR,
-                        "Incompatible types for == operation",
+                        "Incompatible types for != operation",
                     )
                 else:
                     return (op1 != op2)
@@ -177,11 +177,11 @@ class Interpreter(InterpreterBase):
                 if op1.Niltype == op2.Niltype:
                     return False
                 elif op1.Niltype == "Nil" or op2.Niltype == "Nil":
-                    return True
-                else:
+                    return False
+                elif op1.Niltype != op2.Niltype:
                     super().error(
                     ErrorType.TYPE_ERROR,
-                    "Incompatible types for == operation",
+                    "Incompatible types for != operation",
                 )
             elif (op1 == self.Nil() and (op2Type == "int" or op2Type == "bool" or op2Type == "string")) or (op2 == self.Nil() and (op1Type == "int" or op1Type == "bool" or op1Type == "string")):
                 super().error(
@@ -601,25 +601,31 @@ class Interpreter(InterpreterBase):
                                 ErrorType.FAULT_ERROR,
                                 f"Nil access! {var_name}",
                             )
-                        if field_name in self.env_stack[-1][-i][var_name][0][0]:
-                            varType = self.env_stack[-1][-i][var_name][0][0][field_name][1]
-                            if valType ==varType:
-                                self.env_stack[-1][-i][var_name][0][0][field_name][0] = val
-                            elif valType == "int" and varType == "bool":
-                                if val == 0:
-                                    val = False
+                        if isinstance(self.env_stack[-1][-i][var_name][0],list):
+                            if field_name in self.env_stack[-1][-i][var_name][0][0]:
+                                varType = self.env_stack[-1][-i][var_name][0][0][field_name][1]
+                                if valType ==varType:
+                                    self.env_stack[-1][-i][var_name][0][0][field_name][0] = val
+                                elif valType == "int" and varType == "bool":
+                                    if val == 0:
+                                        val = False
+                                    else:
+                                        val = True
+                                    self.env_stack[-1][-i][var_name][0][0][field_name][0] = val
                                 else:
-                                    val = True
-                                self.env_stack[-1][-i][var_name][0][0][field_name][0] = val
+                                    super().error(
+                                        ErrorType.TYPE_ERROR,
+                                        f"var assignment Type not match",
+                                    )
                             else:
                                 super().error(
-                                    ErrorType.TYPE_ERROR,
-                                    f"var assignment Type not match",
-                                )
+                                        ErrorType.NAME_ERROR,
+                                        f"field {field_name} does not exist",
+                                    )
                         else:
                             super().error(
-                                    ErrorType.NAME_ERROR,
-                                    f"field {field_name} does not exist",
+                                    ErrorType.TYPE_ERROR,
+                                    f"attempted to access non-struct with . during assignment",
                                 )
                         #print(self.env_stack[-1][-i][var_name][0][0])
                 elif var.count(".") >= 1:
@@ -806,14 +812,9 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-func main(): void {
-  print("a");
-  return;
-
-
-  print("b");
-
-
+func main() : void {
+  var a : int;
+  a.b = 5;
 }
 
     """
