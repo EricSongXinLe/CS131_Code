@@ -608,6 +608,8 @@ class Interpreter(InterpreterBase):
                                 varType = self.env_stack[-1][-i][var_name][0][0][field_name][1]
                                 if valType ==varType:
                                     self.env_stack[-1][-i][var_name][0][0][field_name][0] = val
+                                elif valType == "Nil" and (varType != "int" and varType != "bool" and varType != "bool" and varType in self.valid_types):
+                                    self.env_stack[-1][-i][var_name][0][0][field_name][0] = self.Nil(varType)
                                 elif valType == "int" and varType == "bool":
                                     if val == 0:
                                         val = False
@@ -824,18 +826,46 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-struct a {
-  name : string;
+struct list {
+    val: int;
+    next: list;
+}
+
+func cons(val: int, l: list) : list {
+    var h: list;
+    h = new list;
+    h.val = val;
+    h.next = l;
+    return h;
+}
+
+func merge_lists(l1: list, l2: list) : list {
+    if (l1 == nil) {
+        return l2;
+    }
+    l1.next = merge_lists(l1.next, l2);
+    return l1;
+}
+
+func print_list(l: list) : void {
+    var x: list;
+    for (x = l; x != nil; x = x.next) {
+        print(x.val);
+    }
 }
 
 func main() : void {
-  print("fj");
-  foo(nil);
+    var l1: list;
+    var l2: list;
+
+    l1 = cons(3, cons(2, cons(1, nil)));
+    l2 = cons(6, cons(5, cons(4, nil)));
+
+    var merged: list;
+    merged = merge_lists(l1, l2);
+    print_list(merged);
 }
 
-func foo(a : a) : vofid {
-  print("hi");
-}
 
     """
 
