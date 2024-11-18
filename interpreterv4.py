@@ -364,25 +364,24 @@ class Interpreter(InterpreterBase):
     def run(self, program):
         ast = parse_program(program)
         self.env_stack = []
-        self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
-        self.env_stack[-1].append(dict())
+        #self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
+        #self.env_stack[-1].append(dict())
         self.funcs = ast.dict['functions']
 
         self.func_call("main",[])
     
     
-'''
-program_source = """
-func bletch(a) {
-  print("The answer is: ", a);
-}
+if __name__ == '__main__':
+    program_source = """
+    func bletch(a) {
+    print("The answer is: ", a);
+    }
 
-func main() {
-  bletch(2==1);
-}
+    func main() {
+    bletch(2==1);
+    }
 
-"""
+    """
 
-inter = Interpreter()
-inter.run(program_source)
-'''
+    inter = Interpreter()
+    inter.run(program_source)
