@@ -148,6 +148,14 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == '&&':
             op1 = self.eval_expr(expr.dict['op1'])
+            if isinstance(op1, bool):
+                if op1 == False:
+                    return False
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for && operation",
+            )
             op2 = self.eval_expr(expr.dict['op2'])
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 and op2
@@ -158,6 +166,14 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == '||':
             op1 = self.eval_expr(expr.dict['op1'])
+            if isinstance(op1, bool):
+                if op1 == True:
+                    return True
+            else:
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Incompatible types for && operation",
+            )
             op2 = self.eval_expr(expr.dict['op2'])
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 or op2
@@ -373,12 +389,20 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-    func bletch(a) {
-    print("The answer is: ", a);
+    func t() {
+    print("t");
+    return true;
+    }
+
+    func f() {
+    print("f");
+    return false;
     }
 
     func main() {
-    bletch(2==1);
+    print(t() || f());
+    print("---");
+    print(f() && t());
     }
 
     """
