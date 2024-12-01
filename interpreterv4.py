@@ -372,6 +372,9 @@ class Interpreter(InterpreterBase):
                 return self.Nil()
             else:
                 return self.eval_expr(expr)
+        elif statement.elem_type == 'try':
+            self.catch_stack.append([])
+            
         else:
             pass
 
@@ -379,6 +382,7 @@ class Interpreter(InterpreterBase):
     
     def run(self, program):
         ast = parse_program(program)
+        self.catch_stack = []
         self.env_stack = []
         #self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
         #self.env_stack[-1].append(dict())
@@ -389,21 +393,6 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-    func t() {
-    print("t");
-    return true;
-    }
-
-    func f() {
-    print("f");
-    return false;
-    }
-
-    func main() {
-    print(t() || f());
-    print("---");
-    print(f() && t());
-    }
 
     """
 
