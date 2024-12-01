@@ -388,19 +388,31 @@ class Interpreter(InterpreterBase):
             for statement in try_statements:
                 res = self.exec_statment(statement)
                 if isinstance(res,self.Exception):
+                    caught = False
                     for catcher in self.catch_stack[-1]:
                         if res.exception_type == catcher.dict['exception_type']:
+                            caught = True
                             catcher_statements = catcher.dict['statements']
                             for catcher_statement in catcher_statements:
                                 catch_res = self.exec_statment(catcher_statement)
                                 if(catch_res!= None):
                                     return catch_res
                             return None
+#                        if not caught:
+#                            super().error(
+#                           ErrorType.FAULT_ERROR,
+#                           "Uncaught error!",
+#                        )
                 if(res!= None):
                     return res
             return None
         elif statement.elem_type == 'raise':
             type = self.eval_expr(statement.dict['exception_type'])
+            if not isinstance(type, str):
+                super().error(
+                ErrorType.TYPE_ERROR,
+                "Exception type must be string!",
+            )
             exception = self.Exception(type)
             return exception
         else:
@@ -422,24 +434,17 @@ class Interpreter(InterpreterBase):
 if __name__ == '__main__':
     program_source = """
 func foo() {
+    var ex;
+    ex = "error2";
     try {
-    print("hi");
-    raise "b";
+        raise ex;
     }
-    catch "a" {
-        print("a");
+    catch "error2" {
+        print("Caught error2");
     }
-    catch "b" {
-        print("b");
-    }
-    catch "c" {
-        print("c");
-    }
-    print("f");
-    
 }
 func main() {
-    print(foo());
+    foo();
 }
     """
 
