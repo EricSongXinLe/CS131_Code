@@ -6,6 +6,11 @@ class Interpreter(InterpreterBase):
     class Nil:
         def __eq__(self, other):
             return isinstance(other,Interpreter.Nil)
+        
+    class Exception:
+        def __init__(self,exception_type):
+            self.exception_type = exception_type
+
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
@@ -66,6 +71,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
             if isinstance(op1, int) and isinstance(op2, int):
+                if op2 == 0:
+                    pass ##div 0 logic pending
                 return op1 // op2
             else:
                 super().error(
@@ -374,7 +381,28 @@ class Interpreter(InterpreterBase):
                 return self.eval_expr(expr)
         elif statement.elem_type == 'try':
             self.catch_stack.append([])
-            
+            catchers = statement.dict['catchers']
+            for catcher in catchers:
+                self.catch_stack[-1].append(catcher)
+            try_statements = statement.dict['statements']
+            for statement in try_statements:
+                res = self.exec_statment(statement)
+                if isinstance(res,self.Exception):
+                    for catcher in self.catch_stack[-1]:
+                        if res.exception_type == catcher.dict['exception_type']:
+                            catcher_statements = catcher.dict['statements']
+                            for catcher_statement in catcher_statements:
+                                catch_res = self.exec_statment(catcher_statement)
+                                if(catch_res!= None):
+                                    return catch_res
+                            return None
+                if(res!= None):
+                    return res
+            return None
+        elif statement.elem_type == 'raise':
+            type = self.eval_expr(statement.dict['exception_type'])
+            exception = self.Exception(type)
+            return exception
         else:
             pass
 
@@ -393,7 +421,26 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-
+func foo() {
+    try {
+    print("hi");
+    raise "b";
+    }
+    catch "a" {
+        print("a");
+    }
+    catch "b" {
+        print("b");
+    }
+    catch "c" {
+        print("c");
+    }
+    print("f");
+    
+}
+func main() {
+    print(foo());
+}
     """
 
     inter = Interpreter()
