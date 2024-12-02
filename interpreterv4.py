@@ -378,14 +378,18 @@ class Interpreter(InterpreterBase):
             self.raise_exception(self.eval_expr(statement.dict['exception_type']))
         elif statement.elem_type == 'try':
             try_statements = statement.dict['statements']
+            self.env_stack[-1].append(dict())
             try:
                 for try_statement in try_statements:
                     try_res = self.exec_statment(try_statement)
                     if try_res != None:
+                        self.env_stack[-1].pop()
                         return try_res
+                self.env_stack[-1].pop()
                 return None
             except Exception as exc:
                 catchers = statement.dict['catchers']
+                self.env_stack[-1].append(dict())
                 for catcher in catchers:
                     caught = False
                     if str(exc) == catcher.dict['exception_type']:
@@ -394,9 +398,14 @@ class Interpreter(InterpreterBase):
                         for catch_statement in catch_statements:
                             catch_res = self.exec_statment(catch_statement)
                             if catch_res != None:
+                                self.env_stack[-1].pop()
+                                self.env_stack[-1].pop()
                                 return catch_res
+                        
                 if not caught:
                     raise
+                self.env_stack[-1].pop()
+                self.env_stack[-1].pop()
                 return None
                             
         else:
@@ -451,23 +460,35 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-func main() {
-    try {
-        try {
-            error_function();
-        }
-        catch "unrelated_error" {
-            print("Caught unrelated_error");
-        }
-    }
-    catch "dfs" {
-        print("Caught propagated_error");
-    }
+func foo() {
+  print("F0");
+  raise "a";
+  print("F1");
 }
 
-func error_function() {
-    raise "propagated_error";
+
+func main() {
+ print("0");
+ try {
+   print("1");
+   foo();
+   print("2");
+ }
+ catch "b" {
+   print("5");
+ }
+ catch "a" {
+   print("3");
+ }
+ catch "c" {
+   print("6");
+ }
+ print("4");
 }
+
+
+
+
 
     """
 
