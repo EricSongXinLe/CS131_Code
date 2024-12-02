@@ -6,6 +6,11 @@ class Interpreter(InterpreterBase):
     class Nil:
         def __eq__(self, other):
             return isinstance(other,Interpreter.Nil)
+        
+    class Exception:
+        def __init__(self,exception_type):
+            self.exception_type = exception_type
+
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
@@ -69,6 +74,7 @@ class Interpreter(InterpreterBase):
                 if op2 == 0:
                     raise Exception("div0")
                 return op1 // op2
+
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -411,6 +417,7 @@ class Interpreter(InterpreterBase):
         else:
             pass
 
+
     def raise_exception(self, type):
         if not isinstance(type, str):
             super().error(
@@ -418,9 +425,11 @@ class Interpreter(InterpreterBase):
             "Exception type must be string!",
         )
         raise Exception(type)
+
     
     def run(self, program):
         ast = parse_program(program)
+        self.catch_stack = []
         self.env_stack = []
         #self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
         #self.env_stack[-1].append(dict())
@@ -485,6 +494,7 @@ func main() {
  }
  print("4");
 }
+
 
 
 
