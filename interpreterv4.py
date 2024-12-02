@@ -407,18 +407,18 @@ class Interpreter(InterpreterBase):
                     return res
             return None
         elif statement.elem_type == 'raise':
-            type = self.eval_expr(statement.dict['exception_type'])
-            if not isinstance(type, str):
-                super().error(
-                ErrorType.TYPE_ERROR,
-                "Exception type must be string!",
-            )
-            exception = self.Exception(type)
-            return exception
+            return self.raise_exception(self.eval_expr(statement.dict['exception_type']))
         else:
             pass
 
-
+    def raise_exception(self, type):
+        if not isinstance(type, str):
+            super().error(
+            ErrorType.TYPE_ERROR,
+            "Exception type must be string!",
+        )
+        exception = self.Exception(type)
+        return exception
     
     def run(self, program):
         ast = parse_program(program)
