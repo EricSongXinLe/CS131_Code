@@ -396,13 +396,7 @@ class Interpreter(InterpreterBase):
                             if catch_res != None:
                                 return catch_res
                 if not caught:
-                    try:
-                        raise
-                    except:
-                        super().error(
-                        ErrorType.FAULT_ERROR,
-                        "Not caught exception!",
-                    )
+                    raise
                 return None
                             
         else:
@@ -422,8 +416,37 @@ class Interpreter(InterpreterBase):
         #self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
         #self.env_stack[-1].append(dict())
         self.funcs = ast.dict['functions']
+        try:
+            self.func_call("main",[])
+        except Exception as err:
+            errorType = err.args[0][10:20]
+            if len(err.args[0]) > 23:
+                errorMsg = err.args[0][22:]
+            else:
+                errorMsg = ""
+            #print(errorType)
+            #print(errorMsg)
+            if errorType == "TYPE_ERROR":
+                    super().error(
+                ErrorType.TYPE_ERROR,
+                errorMsg
+                )
+            elif errorType == "NAME_ERROR":
+                super().error(
+                ErrorType.NAME_ERROR,
+                errorMsg
+                )
+            elif errorType == "FAULT_ERROR":
+                super().error(
+                ErrorType.FAULT_ERROR,
+                errorMsg
+                )
+            else:
+                super().error(
+                ErrorType.FAULT_ERROR,
+                "Uncaught error!"
+                )
 
-        self.func_call("main",[])
     
     
 if __name__ == '__main__':
@@ -437,7 +460,7 @@ func main() {
             print("Caught unrelated_error");
         }
     }
-    catch "propagated_error" {
+    catch "dfs" {
         print("Caught propagated_error");
     }
 }
