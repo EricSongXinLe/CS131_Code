@@ -66,6 +66,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
             if isinstance(op1, int) and isinstance(op2, int):
+                if op2 == 0:
+                    raise Exception("div0")
                 return op1 // op2
             else:
                 super().error(
@@ -385,12 +387,22 @@ class Interpreter(InterpreterBase):
             except Exception as exc:
                 catchers = statement.dict['catchers']
                 for catcher in catchers:
+                    caught = False
                     if str(exc) == catcher.dict['exception_type']:
+                        caught = True
                         catch_statements = catcher.dict['statements']
                         for catch_statement in catch_statements:
                             catch_res = self.exec_statment(catch_statement)
                             if catch_res != None:
                                 return catch_res
+                if not caught:
+                    try:
+                        raise
+                    except:
+                        super().error(
+                        ErrorType.FAULT_ERROR,
+                        "Not caught exception!",
+                    )
                 return None
                             
         else:
@@ -418,11 +430,20 @@ if __name__ == '__main__':
     program_source = """
 func main() {
     try {
-        raise "simple_error";
+        try {
+            error_function();
+        }
+        catch "unrelated_error" {
+            print("Caught unrelated_error");
+        }
     }
-    catch "simple_error" {
-        print("Caught simple_error");
+    catch "propagated_error" {
+        print("Caught propagated_error");
     }
+}
+
+func error_function() {
+    raise "propagated_error";
 }
 
     """
