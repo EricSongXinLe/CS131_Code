@@ -372,10 +372,37 @@ class Interpreter(InterpreterBase):
                 return self.Nil()
             else:
                 return self.eval_expr(expr)
+        elif statement.elem_type == 'raise':
+            self.raise_exception(self.eval_expr(statement.dict['exception_type']))
+        elif statement.elem_type == 'try':
+            try_statements = statement.dict['statements']
+            try:
+                for try_statement in try_statements:
+                    try_res = self.exec_statment(try_statement)
+                    if try_res != None:
+                        return try_res
+                return None
+            except Exception as exc:
+                catchers = statement.dict['catchers']
+                for catcher in catchers:
+                    if str(exc) == catcher.dict['exception_type']:
+                        catch_statements = catcher.dict['statements']
+                        for catch_statement in catch_statements:
+                            catch_res = self.exec_statment(catch_statement)
+                            if catch_res != None:
+                                return catch_res
+                return None
+                            
         else:
             pass
 
-
+    def raise_exception(self, type):
+        if not isinstance(type, str):
+            super().error(
+            ErrorType.TYPE_ERROR,
+            "Exception type must be string!",
+        )
+        raise Exception(type)
     
     def run(self, program):
         ast = parse_program(program)
@@ -389,21 +416,14 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-    func t() {
-    print("t");
-    return true;
+func main() {
+    try {
+        raise "simple_error";
     }
-
-    func f() {
-    print("f");
-    return false;
+    catch "simple_error" {
+        print("Caught simple_error");
     }
-
-    func main() {
-    print(t() || f());
-    print("---");
-    print(f() && t());
-    }
+}
 
     """
 
