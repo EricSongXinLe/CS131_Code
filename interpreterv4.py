@@ -72,8 +72,10 @@ class Interpreter(InterpreterBase):
             )
             if isinstance(op1, int) and isinstance(op2, int):
                 if op2 == 0:
-                    pass ##div 0 logic pending
-                return op1 // op2
+                    self.catch_exception(self.Exception("div0"))
+                    ##div 0
+                else:
+                    return op1 // op2
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -385,32 +387,43 @@ class Interpreter(InterpreterBase):
             for catcher in catchers:
                 self.catch_stack[-1].append(catcher)
             try_statements = statement.dict['statements']
-            for statement in try_statements:
-                res = self.exec_statment(statement)
+            for try_statement in try_statements:
+                res = self.exec_statment(try_statement)
+                hasException = False
                 if isinstance(res,self.Exception):
-                    caught = False
-                    for catcher in self.catch_stack[-1]:
-                        if res.exception_type == catcher.dict['exception_type']:
-                            caught = True
-                            catcher_statements = catcher.dict['statements']
-                            for catcher_statement in catcher_statements:
-                                catch_res = self.exec_statment(catcher_statement)
-                                if(catch_res!= None):
-                                    return catch_res
-                            return None
-#                        if not caught:
-#                            super().error(
-#                           ErrorType.FAULT_ERROR,
-#                           "Uncaught error!",
-#                        )
-                if(res!= None):
+                    hasException = True
+                    self.catch_exception(res)
+                elif(res!= None): #Return 
                     return res
+            if not hasException:
+                self.catch_stack.pop()
             return None
         elif statement.elem_type == 'raise':
             return self.raise_exception(self.eval_expr(statement.dict['exception_type']))
         else:
             pass
-
+    def catch_exception(self, res):
+        caught = False
+        catch_stack_len = len(self.catch_stack)
+        for i in range(1,catch_stack_len+1):
+            for catcher in self.catch_stack[-i]:
+                if res.exception_type == catcher.dict['exception_type']:
+                    caught = True
+                    catcher_statements = catcher.dict['statements']
+                    for catcher_statement in catcher_statements:
+                        catch_res = self.exec_statment(catcher_statement)
+                        if isinstance(catch_res,self.Exception):
+                            self.catch_exception(catch_res)
+                        if(catch_res!= None):
+                            self.catch_stack.pop()
+                            return catch_res
+                    self.catch_stack.pop()
+                    return None
+#                        if not caught:
+#                            super().error(
+#                           ErrorType.FAULT_ERROR,
+#                           "Uncaught error!",
+#                        )        
     def raise_exception(self, type):
         if not isinstance(type, str):
             super().error(
@@ -433,19 +446,19 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-func foo() {
-    var ex;
-    ex = "error2";
+func main() {
     try {
-        raise ex;
+        raise "error1";
+    }
+    catch "error1" {
+        print("Caught error1");
+        raise "error2";
     }
     catch "error2" {
         print("Caught error2");
     }
 }
-func main() {
-    foo();
-}
+
     """
 
     inter = Interpreter()
