@@ -390,8 +390,8 @@ class Interpreter(InterpreterBase):
             except Exception as exc:
                 catchers = statement.dict['catchers']
                 self.env_stack[-1].append(dict())
+                caught = False
                 for catcher in catchers:
-                    caught = False
                     if str(exc) == catcher.dict['exception_type']:
                         caught = True
                         catch_statements = catcher.dict['statements']
