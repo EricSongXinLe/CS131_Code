@@ -72,10 +72,9 @@ class Interpreter(InterpreterBase):
             )
             if isinstance(op1, int) and isinstance(op2, int):
                 if op2 == 0:
-                    self.catch_exception(self.Exception("div0"))
-                    ##div 0
-                else:
-                    return op1 // op2
+                    raise Exception("div0")
+                return op1 // op2
+
             else:
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -381,57 +380,52 @@ class Interpreter(InterpreterBase):
                 return self.Nil()
             else:
                 return self.eval_expr(expr)
-        elif statement.elem_type == 'try':
-            self.catch_stack.append([])
-            catchers = statement.dict['catchers']
-            for catcher in catchers:
-                self.catch_stack[-1].append(catcher)
-            try_statements = statement.dict['statements']
-            for try_statement in try_statements:
-                res = self.exec_statment(try_statement)
-                hasException = False
-                if isinstance(res,self.Exception):
-                    hasException = True
-                    self.catch_exception(res)
-                elif(res!= None): #Return 
-                    return res
-            if not hasException:
-                self.catch_stack.pop()
-            return None
         elif statement.elem_type == 'raise':
-            return self.raise_exception(self.eval_expr(statement.dict['exception_type']))
+            self.raise_exception(self.eval_expr(statement.dict['exception_type']))
+        elif statement.elem_type == 'try':
+            try_statements = statement.dict['statements']
+            self.env_stack[-1].append(dict())
+            try:
+                for try_statement in try_statements:
+                    try_res = self.exec_statment(try_statement)
+                    if try_res != None:
+                        self.env_stack[-1].pop()
+                        return try_res
+                self.env_stack[-1].pop()
+                return None
+            except Exception as exc:
+                catchers = statement.dict['catchers']
+                self.env_stack[-1].append(dict())
+                caught = False
+                for catcher in catchers:
+                    if str(exc) == catcher.dict['exception_type']:
+                        caught = True
+                        catch_statements = catcher.dict['statements']
+                        for catch_statement in catch_statements:
+                            catch_res = self.exec_statment(catch_statement)
+                            if catch_res != None:
+                                self.env_stack[-1].pop()
+                                self.env_stack[-1].pop()
+                                return catch_res
+                        
+                if not caught:
+                    raise
+                self.env_stack[-1].pop()
+                self.env_stack[-1].pop()
+                return None
+                            
         else:
             pass
-    def catch_exception(self, res):
-        caught = False
-        catch_stack_len = len(self.catch_stack)
-        for i in range(1,catch_stack_len+1):
-            for catcher in self.catch_stack[-i]:
-                if res.exception_type == catcher.dict['exception_type']:
-                    caught = True
-                    catcher_statements = catcher.dict['statements']
-                    for catcher_statement in catcher_statements:
-                        catch_res = self.exec_statment(catcher_statement)
-                        if isinstance(catch_res,self.Exception):
-                            self.catch_exception(catch_res)
-                        if(catch_res!= None):
-                            self.catch_stack.pop()
-                            return catch_res
-                    self.catch_stack.pop()
-                    return None
-#                        if not caught:
-#                            super().error(
-#                           ErrorType.FAULT_ERROR,
-#                           "Uncaught error!",
-#                        )        
+
+
     def raise_exception(self, type):
         if not isinstance(type, str):
             super().error(
             ErrorType.TYPE_ERROR,
             "Exception type must be string!",
         )
-        exception = self.Exception(type)
-        return exception
+        raise Exception(type)
+
     
     def run(self, program):
         ast = parse_program(program)
@@ -440,24 +434,71 @@ class Interpreter(InterpreterBase):
         #self.env_stack.append([]) ##[[func1: {scope1,},{scope2}],[func2: {scope1},{scope2}]]
         #self.env_stack[-1].append(dict())
         self.funcs = ast.dict['functions']
+        try:
+            self.func_call("main",[])
+        except Exception as err:
+            errorType = err.args[0][10:20]
+            if len(err.args[0]) > 23:
+                errorMsg = err.args[0][22:]
+            else:
+                errorMsg = ""
+            #print(errorType)
+            #print(errorMsg)
+            if errorType == "TYPE_ERROR":
+                    super().error(
+                ErrorType.TYPE_ERROR,
+                errorMsg
+                )
+            elif errorType == "NAME_ERROR":
+                super().error(
+                ErrorType.NAME_ERROR,
+                errorMsg
+                )
+            elif errorType == "FAULT_ERROR":
+                super().error(
+                ErrorType.FAULT_ERROR,
+                errorMsg
+                )
+            else:
+                super().error(
+                ErrorType.FAULT_ERROR,
+                "Uncaught error!"
+                )
 
-        self.func_call("main",[])
     
     
 if __name__ == '__main__':
     program_source = """
-func main() {
-    try {
-        raise "error1";
-    }
-    catch "error1" {
-        print("Caught error1");
-        raise "error2";
-    }
-    catch "error2" {
-        print("Caught error2");
-    }
+func foo() {
+  print("F0");
+  raise "a";
+  print("F1");
 }
+
+
+func main() {
+ print("0");
+ try {
+   print("1");
+   foo();
+   print("2");
+ }
+ catch "b" {
+   print("5");
+ }
+ catch "a" {
+   print("3");
+ }
+ catch "c" {
+   print("6");
+ }
+ print("4");
+}
+
+
+
+
+
 
     """
 
