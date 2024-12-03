@@ -2,6 +2,8 @@ from intbase import InterpreterBase
 from intbase import ErrorType
 from brewparse import parse_program
 
+import copy
+
 class Interpreter(InterpreterBase):
     class Nil:
         def __eq__(self, other):
@@ -11,6 +13,14 @@ class Interpreter(InterpreterBase):
         def __init__(self,exception_type):
             self.exception_type = exception_type
 
+    class Closure:
+        def __init__(self,expr,scope):
+            self.expr = expr
+            self.scope = scope
+            self.evaluated = False
+            self.value = None
+
+    
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
@@ -239,7 +249,18 @@ class Interpreter(InterpreterBase):
         if funcName == 'print':
             outstr = ''
             for arg in args:
-                curr = str(self.eval_expr(arg))
+                closure = self.eval_expr(arg)
+                value = None
+                if isinstance(closure,self.Closure):
+                    if closure.evaluated:
+                        value = closure.value
+                    else:
+                        value = self.eval_expr(closure.expr)
+                        closure.value = value
+                        closure.evaluated = True
+                else:
+                    value = closure
+                curr = str(value)
                 if curr == 'True':
                     curr = 'true'
                 elif curr == 'False':
@@ -286,7 +307,7 @@ class Interpreter(InterpreterBase):
                         else:
                             callerVals = []
                             for callerArg in callerArgs:
-                                callerVals.append(self.eval_expr(callerArg))
+                                callerVals.append(self.Closure(callerArg))
                             self.env_stack.append([])
                             self.env_stack[-1].append(dict())
                             for calleeArg,callerVal in zip(calleeArgs,callerVals):
@@ -322,7 +343,8 @@ class Interpreter(InterpreterBase):
             for i in range(1,stack_depth+1):
                 if var in self.env_stack[-1][-i] and not found:
                     found = True
-                    self.env_stack[-1][-i][var] = self.eval_expr(statement.dict['expression'])
+                    #self.env_stack[-1][-i][var] = self.eval_expr(statement.dict['expression'])
+                    self.env_stack[-1][-i][var] = self.Closure(statement.dict['expression'],copy.deepcopy(self.env_stack))
             if(not found): #still not found??
                 super().error(
                 ErrorType.NAME_ERROR,
@@ -436,6 +458,12 @@ class Interpreter(InterpreterBase):
         self.funcs = ast.dict['functions']
         try:
             self.func_call("main",[])
+        except AttributeError:
+            raise
+        except NameError:
+            raise 
+        except TypeError:
+            raise
         except Exception as err:
             errorType = err.args[0][10:20]
             if len(err.args[0]) > 23:
@@ -469,31 +497,20 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
-func foo() {
-  print("F0");
-  raise "a";
-  print("F1");
-}
-
-
 func main() {
- print("0");
- try {
-   print("1");
-   foo();
-   print("2");
- }
- catch "b" {
-   print("5");
- }
- catch "a" {
-   print("3");
- }
- catch "c" {
-   print("6");
- }
- print("4");
+    var x;
+    x = lazy_function();
+    var y;
+    y = 5 + x;
+    print("Before using y");
+    print(y);
 }
+
+func lazy_function() {
+    print("Lazy function evaluated");
+    return 3;
+}
+
 
 
 
