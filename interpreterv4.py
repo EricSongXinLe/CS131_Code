@@ -298,7 +298,7 @@ class Interpreter(InterpreterBase):
                 f"No inputi() function found that takes > 1 parameter",
             )
             if args != []:
-                out_string = self.eval_expr(args[0])
+                out_string = self.process_op(self.eval_expr(args[0]))
                 super().output(out_string)
             user_input = int(super().get_input())
             return user_input
@@ -309,7 +309,7 @@ class Interpreter(InterpreterBase):
                 f"No inputs() function found that takes > 1 parameter",
             )
             if args != []:
-                out_string = self.eval_expr(args[0])
+                out_string = self.process_op(self.eval_expr(args[0]))
                 super().output(out_string)
             user_input = str(super().get_input())
             return user_input
@@ -540,9 +540,12 @@ func bar(x) {
 
 func main() {
  var a;
- a = -bar(1);
+ a = bar("5");
  print("---");
- print(a);
+ var b;
+ b = inputi(a);
+ print("---");
+ print(b);
 }
     """
 
