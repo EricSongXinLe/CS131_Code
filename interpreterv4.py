@@ -280,12 +280,9 @@ class Interpreter(InterpreterBase):
         if funcName == 'print':
             outstr = ''
             for arg in args:
-                closure = self.eval_expr(arg)
-                value = None
-                if isinstance(closure,self.Closure):
-                    value = self.resolve_closure(closure)
-                else:
-                    value = closure
+                value = self.eval_expr(arg)
+                while isinstance(value,self.Closure):
+                    value = self.resolve_closure(value)
                 curr = str(value)
                 if curr == 'True':
                     curr = 'true'
@@ -536,18 +533,18 @@ if __name__ == '__main__':
     program_source = """
 func main() {
     var x;
-    x = 10;
-    try {
-        var x;
-        x = 5;
-        print(x);
-        raise "test_error";
-    }
-    catch "test_error" {
-        print(x);
-        print("Caught test_error");
-    }
-    print(x);
+    x = lazy_function();
+    print_value(x);
+    print_value(x); 
+}
+
+func print_value(value) {
+    print(value);
+}
+
+func lazy_function() {
+    print("Lazy function evaluated");
+    return 7;
 }
 
     """
