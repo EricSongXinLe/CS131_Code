@@ -24,6 +24,14 @@ class Interpreter(InterpreterBase):
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
+    def __get_snapshot(self):
+        snapshot = []
+        for j in range(len(self.env_stack[-1])):
+            snapshot.append({})
+            for var_to_copy in self.env_stack[-1][j]:
+                snapshot[j][var_to_copy] = self.env_stack[-1][j][var_to_copy]
+        return snapshot
+    
     def resolve_closure(self, closure):
         if closure.evaluated == True:
             return closure.value
@@ -324,8 +332,9 @@ class Interpreter(InterpreterBase):
                             self.env_stack[-1].append(dict())
                         else:
                             callerVals = []
+                            snapshot = self.__get_snapshot()
                             for callerArg in callerArgs:
-                                callerVals.append(self.Closure(callerArg))
+                                callerVals.append(self.Closure(callerArg,snapshot))
                             self.env_stack.append([])
                             self.env_stack[-1].append(dict())
                             for calleeArg,callerVal in zip(calleeArgs,callerVals):
@@ -362,11 +371,7 @@ class Interpreter(InterpreterBase):
                 if var in self.env_stack[-1][-i] and not found:
                     found = True
                     #self.env_stack[-1][-i][var] = self.eval_expr(statement.dict['expression'])
-                    snapshot = []
-                    for j in range(len(self.env_stack[-1])):
-                        snapshot.append({})
-                        for var_to_copy in self.env_stack[-1][j]:
-                            snapshot[j][var_to_copy] = self.env_stack[-1][j][var_to_copy]
+                    snapshot = self.__get_snapshot()
                     self.env_stack[-1][-i][var] = self.Closure(statement.dict['expression'],snapshot)
             if(not found): #still not found??
                 super().error(
@@ -523,17 +528,18 @@ class Interpreter(InterpreterBase):
 if __name__ == '__main__':
     program_source = """
 func main() {
-    var x;
-    x = lazy_function();
-    print(x);
+    print_value(lazy_function());
+    print_value(lazy_function()); 
+}
+
+func print_value(value) {
+    print(value);
 }
 
 func lazy_function() {
     print("Lazy function evaluated");
-    return 42;
+    return 7;
 }
-
-
 
 
 
