@@ -24,25 +24,25 @@ class Interpreter(InterpreterBase):
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
+    def resolve_closure(self, closure):
+        if closure.evaluated == True:
+            return closure.value
+        self.env_stack.append(closure.env)
+        result = self.eval_expr(closure.expr)
+        closure.value = result  
+        closure.evaluated = True
+        self.env_stack.pop()
+        return result
+
+
     def eval_expr(self, expr):
         if expr.elem_type == '+':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
             if isinstance(op1,self.Closure):
-                print(f"Resolving closure: {op1}")
-                print(op1.expr)
                 c1 = op1
                 while isinstance(c1, self.Closure):
-                    if not c1.evaluated:
-                        print(f"Evaluating closure: {c1}")
-                        self.env_stack.append(c1.env)
-                        c1 = self.eval_expr(c1.expr)
-                        op1.evaluated = True
-                        op1.value = c1
-                        self.env_stack.pop()
-                    else:
-                        print(f"Using cached value for closure: {c1.value}")
-                        c1 = c1.value
+                    c1 = self.resolve_closure(c1)
                 op1 = c1
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
@@ -268,12 +268,7 @@ class Interpreter(InterpreterBase):
                 closure = self.eval_expr(arg)
                 value = None
                 if isinstance(closure,self.Closure):
-                    if closure.evaluated:
-                        value = closure.value
-                    else:
-                        value = self.eval_expr(closure.expr)
-                        closure.value = value
-                        closure.evaluated = True
+                    value = self.resolve_closure(closure)
                 else:
                     value = closure
                 curr = str(value)
@@ -479,6 +474,8 @@ class Interpreter(InterpreterBase):
         self.funcs = ast.dict['functions']
         try:
             self.func_call("main",[])
+        except RecursionError:
+            raise
         except AttributeError:
             raise
         except NameError:
@@ -521,11 +518,13 @@ if __name__ == '__main__':
 func main() {
     var x;
     x = 0;
-    x = x + 1;
+    print("fX");
+    x = foo() + 1;
     print(x);
 }
 
 func foo() {
+    print("f");
     return 3;
 }
 
