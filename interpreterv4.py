@@ -59,6 +59,7 @@ class Interpreter(InterpreterBase):
                 while isinstance(c1, self.Closure):
                     c1 = self.resolve_closure(c1)
                 op1 = c1
+
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -76,6 +77,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '-':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -91,6 +93,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '*':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -106,6 +109,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '/':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -124,6 +128,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '==':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if type(op1) == type(op2):
                 return (op1 == op2)
             else:
@@ -131,6 +136,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '!=':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if type(op1) == type(op2):
                 return (op1 != op2)
             else:
@@ -138,6 +144,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '<':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -153,6 +160,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '<=':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -168,6 +176,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '>':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -183,6 +192,7 @@ class Interpreter(InterpreterBase):
         elif expr.elem_type == '>=':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -197,6 +207,7 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == '&&':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+
             if isinstance(op1, bool):
                 if op1 == False:
                     return False
@@ -206,6 +217,7 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for && operation",
             )
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 and op2
             else:
@@ -215,6 +227,7 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == '||':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+
             if isinstance(op1, bool):
                 if op1 == True:
                     return True
@@ -224,6 +237,7 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for && operation",
             )
             op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 or op2
             else:
@@ -233,12 +247,12 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == 'var':
             var = expr.dict['name']
-            stack_depth = len(self.env_stack[-1])
+            stack_depth = len(env[-1])
             found = False
             for i in range(1,stack_depth+1):
-                if var in self.env_stack[-1][-i]:
+                if var in env[-1][-i]:
                     found = True
-                    return self.env_stack[-1][-i][var] #var found in current scope
+                    return env[-1][-i][var] #var found in current scope
                 #not found, go to previous stack.
             if(not found):
                 super().error(
@@ -247,6 +261,7 @@ class Interpreter(InterpreterBase):
                 ) 
         elif expr.elem_type == 'neg':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+
             if isinstance(op1,bool):
                 super().error(
                     ErrorType.TYPE_ERROR,
@@ -261,6 +276,7 @@ class Interpreter(InterpreterBase):
                 ) 
         elif expr.elem_type == '!':
             op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+
             if isinstance(op1, bool):
                 return not op1
             else:
@@ -283,6 +299,7 @@ class Interpreter(InterpreterBase):
                 value = self.eval_expr(arg)
                 while isinstance(value,self.Closure):
                     value = self.resolve_closure(value)
+
                 curr = str(value)
                 if curr == 'True':
                     curr = 'true'
@@ -299,6 +316,7 @@ class Interpreter(InterpreterBase):
             )
             if args != []:
                 out_string = self.process_op(self.eval_expr(args[0]))
+
                 super().output(out_string)
             user_input = int(super().get_input())
             return user_input
@@ -310,6 +328,7 @@ class Interpreter(InterpreterBase):
             )
             if args != []:
                 out_string = self.process_op(self.eval_expr(args[0]))
+
                 super().output(out_string)
             user_input = str(super().get_input())
             return user_input
@@ -332,6 +351,7 @@ class Interpreter(InterpreterBase):
                             snapshot = self.__get_snapshot()
                             for callerArg in callerArgs:
                                 callerVals.append(self.Closure(callerArg,snapshot))
+
                             self.env_stack.append([])
                             self.env_stack[-1].append(dict())
                             for calleeArg,callerVal in zip(calleeArgs,callerVals):
@@ -369,6 +389,7 @@ class Interpreter(InterpreterBase):
                     found = True
                     #self.env_stack[-1][-i][var] = self.eval_expr(statement.dict['expression'])
                     snapshot = self.__get_snapshot()
+
                     self.env_stack[-1][-i][var] = self.Closure(statement.dict['expression'],snapshot)
             if(not found): #still not found??
                 super().error(
@@ -379,7 +400,14 @@ class Interpreter(InterpreterBase):
             self.func_call(statement.dict['name'],statement.dict['args'])
         elif statement.elem_type == 'if':
             cond = statement.dict['condition']
-            cond = self.eval_expr(cond)
+            cond = self.eval_expr(cond,self.env_stack)
+            if isinstance(cond,self.Closure):
+                    if cond.evaluated:
+                        cond = cond.value
+                    else:
+                        cond.evaluated = True
+                        cond.value = self.eval_expr(cond.expr,cond.env)
+                        cond = cond.value
             if isinstance(cond,bool):
                 if cond:
                     self.env_stack[-1].append(dict())
@@ -403,12 +431,23 @@ class Interpreter(InterpreterBase):
                     "Condition must eval to bool",
                 )
         elif statement.elem_type == 'for':
+            def eval_for_cond(cond):
+                cond = self.eval_expr(cond,self.env_stack)
+                if isinstance(cond,self.Closure):
+                    if cond.evaluated:
+                        cond = cond.value
+                    else:
+                        cond.evaluated = True
+                        cond.value = self.eval_expr(cond.expr,cond.env)
+                        cond = cond.value
+                return cond
+                    
             init=statement.dict['init']
             self.exec_statment(init)
             cond = statement.dict['condition']
             update =statement.dict['update']
             statements = statement.dict['statements']
-            while(status := self.eval_expr(cond)):
+            while(status := eval_for_cond(cond)):
                 if not isinstance(status, bool):
                     super().error(
                     ErrorType.TYPE_ERROR,
@@ -435,8 +474,9 @@ class Interpreter(InterpreterBase):
                 #else:
                 #    value = closure
                 #return value
+
         elif statement.elem_type == 'raise':
-            self.raise_exception(self.eval_expr(statement.dict['exception_type']))
+            self.raise_exception(self.eval_expr(statement.dict['exception_type'],self.env_stack))
         elif statement.elem_type == 'try':
             try_statements = statement.dict['statements']
             self.env_stack[-1].append(dict())
@@ -500,6 +540,8 @@ class Interpreter(InterpreterBase):
             raise 
         except TypeError:
             raise
+        except RecursionError:
+            raise
         except Exception as err:
             errorType = err.args[0][10:20]
             if len(err.args[0]) > 23:
@@ -547,6 +589,7 @@ func main() {
  print("---");
  print(b);
 }
+
     """
 
     inter = Interpreter()
