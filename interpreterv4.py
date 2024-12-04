@@ -450,6 +450,7 @@ class Interpreter(InterpreterBase):
                 self.env_stack[-1].pop()
                 return None
             except Exception as exc:
+                self.env_stack[-1].pop()
                 catchers = statement.dict['catchers']
                 self.env_stack[-1].append(dict())
                 caught = False
@@ -461,13 +462,13 @@ class Interpreter(InterpreterBase):
                             catch_res = self.exec_statment(catch_statement)
                             if catch_res != None:
                                 self.env_stack[-1].pop()
-                                self.env_stack[-1].pop()
+                                #self.env_stack[-1].pop()
                                 return catch_res
                         
                 if not caught:
                     raise
                 self.env_stack[-1].pop()
-                self.env_stack[-1].pop()
+                #self.env_stack[-1].pop()
                 return None
                             
         else:
@@ -535,18 +536,18 @@ if __name__ == '__main__':
     program_source = """
 func main() {
     var x;
-    x = lazy_function();
-    print_value(x);
-    print_value(x); 
-}
-
-func print_value(value) {
-    print(value);
-}
-
-func lazy_function() {
-    print("Lazy function evaluated");
-    return 7;
+    x = 10;
+    try {
+        var x;
+        x = 5;
+        print(x);
+        raise "test_error";
+    }
+    catch "test_error" {
+        print(x);
+        print("Caught test_error");
+    }
+    print(x);
 }
 
     """
