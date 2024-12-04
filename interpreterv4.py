@@ -24,30 +24,41 @@ class Interpreter(InterpreterBase):
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
 
-    def eval_expr(self, expr,env):
+    def __get_snapshot(self):
+        snapshot = []
+        for j in range(len(self.env_stack[-1])):
+            snapshot.append({})
+            for var_to_copy in self.env_stack[-1][j]:
+                snapshot[j][var_to_copy] = self.env_stack[-1][j][var_to_copy]
+        return snapshot
+    
+    def resolve_closure(self, closure):
+        if closure.evaluated == True:
+            return closure.value
+        self.env_stack.append(closure.env)
+        result = self.eval_expr(closure.expr)
+        closure.value = result  
+        closure.evaluated = True
+        self.env_stack.pop()
+        return result
+
+    def process_op(self, op):
+        if isinstance(op,self.Closure):
+            c = op
+            while isinstance(c, self.Closure):
+                c = self.resolve_closure(c)
+            op = c
+        return op
+
+    def eval_expr(self, expr):
         if expr.elem_type == '+':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
+            if isinstance(op1,self.Closure):
+                c1 = op1
+                while isinstance(c1, self.Closure):
+                    c1 = self.resolve_closure(c1)
+                op1 = c1
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -63,28 +74,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
         elif expr.elem_type == '-':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -98,28 +89,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
         elif expr.elem_type == '*':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -133,28 +104,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
         elif expr.elem_type == '/':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -171,83 +122,22 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
         elif expr.elem_type == '==':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if type(op1) == type(op2):
                 return (op1 == op2)
             else:
                 return False
         elif expr.elem_type == '!=':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if type(op1) == type(op2):
                 return (op1 != op2)
             else:
                 return True
         elif expr.elem_type == '<':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
-            
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -261,28 +151,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for < operation",
             )
         elif expr.elem_type == '<=':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -296,28 +166,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for <= operation",
             )
         elif expr.elem_type == '>':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -331,28 +181,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for > operation",
             )
         elif expr.elem_type == '>=':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -366,17 +196,7 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for >= operation",
             )
         elif expr.elem_type == '&&':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             if isinstance(op1, bool):
                 if op1 == False:
                     return False
@@ -385,17 +205,7 @@ class Interpreter(InterpreterBase):
                 ErrorType.TYPE_ERROR,
                 "Incompatible types for && operation",
             )
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 and op2
             else:
@@ -404,17 +214,7 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for && operation",
             )
         elif expr.elem_type == '||':
-            op1_c = self.eval_expr(expr.dict['op1'],env)
-            if isinstance(op1_c, self.Closure):
-                if not op1_c.evaluated:
-                    
-                    op1 = self.eval_expr(op1_c.expr,op1_c.env)
-                    op1_c.value = op1
-                    op1_c.evaluated = True
-                else:
-                    op1 = op1_c.value
-            else:
-                op1 = op1_c
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             if isinstance(op1, bool):
                 if op1 == True:
                     return True
@@ -423,17 +223,7 @@ class Interpreter(InterpreterBase):
                 ErrorType.TYPE_ERROR,
                 "Incompatible types for && operation",
             )
-            op2_c = self.eval_expr(expr.dict['op2'],env)
-            if isinstance(op2_c, self.Closure):
-                if not op2_c.evaluated:
-                    
-                    op2 = self.eval_expr(op2_c.expr,op2_c.env)
-                    op2_c.value = op2
-                    op2_c.evaluated = True
-                else:
-                    op2 = op2_c.value
-            else:
-                op2 = op2_c
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 or op2
             else:
@@ -443,12 +233,12 @@ class Interpreter(InterpreterBase):
             )
         elif expr.elem_type == 'var':
             var = expr.dict['name']
-            stack_depth = len(env[-1])
+            stack_depth = len(self.env_stack[-1])
             found = False
             for i in range(1,stack_depth+1):
-                if var in env[-1][-i]:
+                if var in self.env_stack[-1][-i]:
                     found = True
-                    return env[-1][-i][var] #var found in current scope
+                    return self.env_stack[-1][-i][var] #var found in current scope
                 #not found, go to previous stack.
             if(not found):
                 super().error(
@@ -456,7 +246,7 @@ class Interpreter(InterpreterBase):
                     f"Variable {var} has not been defined",
                 ) 
         elif expr.elem_type == 'neg':
-            op1 = self.eval_expr(expr.dict['op1'],env)
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             if isinstance(op1,bool):
                 super().error(
                     ErrorType.TYPE_ERROR,
@@ -470,7 +260,7 @@ class Interpreter(InterpreterBase):
                     "Incompatible types for neg operation",
                 ) 
         elif expr.elem_type == '!':
-            op1 = self.eval_expr(expr.dict['op1'],env)
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             if isinstance(op1, bool):
                 return not op1
             else:
@@ -490,17 +280,9 @@ class Interpreter(InterpreterBase):
         if funcName == 'print':
             outstr = ''
             for arg in args:
-                closure = self.eval_expr(arg,self.env_stack)
-                value = None
-                if isinstance(closure,self.Closure):
-                    if closure.evaluated:
-                        value = closure.value
-                    else:
-                        value = self.eval_expr(closure.expr,closure.env)
-                        closure.value = value
-                        closure.evaluated = True
-                else:
-                    value = closure
+                value = self.eval_expr(arg)
+                while isinstance(value,self.Closure):
+                    value = self.resolve_closure(value)
                 curr = str(value)
                 if curr == 'True':
                     curr = 'true'
@@ -516,7 +298,7 @@ class Interpreter(InterpreterBase):
                 f"No inputi() function found that takes > 1 parameter",
             )
             if args != []:
-                out_string = self.eval_expr(args[0],self.env_stack)
+                out_string = self.process_op(self.eval_expr(args[0]))
                 super().output(out_string)
             user_input = int(super().get_input())
             return user_input
@@ -527,7 +309,7 @@ class Interpreter(InterpreterBase):
                 f"No inputs() function found that takes > 1 parameter",
             )
             if args != []:
-                out_string = self.eval_expr(args[0],self.env_stack)
+                out_string = self.process_op(self.eval_expr(args[0]))
                 super().output(out_string)
             user_input = str(super().get_input())
             return user_input
@@ -547,8 +329,9 @@ class Interpreter(InterpreterBase):
                             self.env_stack[-1].append(dict())
                         else:
                             callerVals = []
+                            snapshot = self.__get_snapshot()
                             for callerArg in callerArgs:
-                                callerVals.append(self.Closure(callerArg,self.env_stack))
+                                callerVals.append(self.Closure(callerArg,snapshot))
                             self.env_stack.append([])
                             self.env_stack[-1].append(dict())
                             for calleeArg,callerVal in zip(calleeArgs,callerVals):
@@ -585,14 +368,7 @@ class Interpreter(InterpreterBase):
                 if var in self.env_stack[-1][-i] and not found:
                     found = True
                     #self.env_stack[-1][-i][var] = self.eval_expr(statement.dict['expression'])
-                    snapshot = []
-                    for i in range(len(self.env_stack)):
-                        snapshot.append([])
-                        for j in range(len(self.env_stack[i])):
-                            snapshot[i].append({})
-                            for var_to_copy in self.env_stack[i][j]:
-                                snapshot[i][j][var_to_copy] = self.env_stack[i][j][var_to_copy]
-
+                    snapshot = self.__get_snapshot()
                     self.env_stack[-1][-i][var] = self.Closure(statement.dict['expression'],snapshot)
             if(not found): #still not found??
                 super().error(
@@ -603,14 +379,7 @@ class Interpreter(InterpreterBase):
             self.func_call(statement.dict['name'],statement.dict['args'])
         elif statement.elem_type == 'if':
             cond = statement.dict['condition']
-            cond = self.eval_expr(cond,self.env_stack)
-            if isinstance(cond,self.Closure):
-                    if cond.evaluated:
-                        cond = cond.value
-                    else:
-                        cond.evaluated = True
-                        cond.value = self.eval_expr(cond.expr,cond.env)
-                        cond = cond.value
+            cond = self.eval_expr(cond)
             if isinstance(cond,bool):
                 if cond:
                     self.env_stack[-1].append(dict())
@@ -634,23 +403,12 @@ class Interpreter(InterpreterBase):
                     "Condition must eval to bool",
                 )
         elif statement.elem_type == 'for':
-            def eval_for_cond(cond):
-                cond = self.eval_expr(cond,self.env_stack)
-                if isinstance(cond,self.Closure):
-                    if cond.evaluated:
-                        cond = cond.value
-                    else:
-                        cond.evaluated = True
-                        cond.value = self.eval_expr(cond.expr,cond.env)
-                        cond = cond.value
-                return cond
-                    
             init=statement.dict['init']
             self.exec_statment(init)
             cond = statement.dict['condition']
             update =statement.dict['update']
             statements = statement.dict['statements']
-            while(status := eval_for_cond(cond)):
+            while(status := self.eval_expr(cond)):
                 if not isinstance(status, bool):
                     super().error(
                     ErrorType.TYPE_ERROR,
@@ -668,17 +426,17 @@ class Interpreter(InterpreterBase):
             if expr == None:
                 return self.Nil()
             else:
-                expr = self.eval_expr(expr,self.env_stack)
-                if isinstance(expr,self.Closure):
-                    if expr.evaluated:
-                        expr = expr.value
-                    else:
-                        expr.evaluated = True
-                        expr.value = self.eval_expr(expr.expr,expr.env)
-                        expr = expr.value
-                return expr
+                snapshot = self.__get_snapshot()
+                return self.Closure(expr,snapshot)
+                #losure = self.eval_expr(expr)
+                #value = None
+                #if isinstance(closure,self.Closure):
+                #    value = self.resolve_closure(closure)
+                #else:
+                #    value = closure
+                #return value
         elif statement.elem_type == 'raise':
-            self.raise_exception(self.eval_expr(statement.dict['exception_type'],self.env_stack))
+            self.raise_exception(self.eval_expr(statement.dict['exception_type']))
         elif statement.elem_type == 'try':
             try_statements = statement.dict['statements']
             self.env_stack[-1].append(dict())
@@ -691,6 +449,7 @@ class Interpreter(InterpreterBase):
                 self.env_stack[-1].pop()
                 return None
             except Exception as exc:
+                self.env_stack[-1].pop()
                 catchers = statement.dict['catchers']
                 self.env_stack[-1].append(dict())
                 caught = False
@@ -702,13 +461,13 @@ class Interpreter(InterpreterBase):
                             catch_res = self.exec_statment(catch_statement)
                             if catch_res != None:
                                 self.env_stack[-1].pop()
-                                self.env_stack[-1].pop()
+                                #self.env_stack[-1].pop()
                                 return catch_res
                         
                 if not caught:
                     raise
                 self.env_stack[-1].pop()
-                self.env_stack[-1].pop()
+                #self.env_stack[-1].pop()
                 return None
                             
         else:
@@ -733,13 +492,13 @@ class Interpreter(InterpreterBase):
         self.funcs = ast.dict['functions']
         try:
             self.func_call("main",[])
+        except RecursionError:
+            raise
         except AttributeError:
             raise
         except NameError:
             raise 
         except TypeError:
-            raise
-        except RecursionError:
             raise
         except Exception as err:
             errorType = err.args[0][10:20]
@@ -774,31 +533,20 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
+func bar(x) {
+ print("bar: ", x);
+ return x;
+}
+
 func main() {
-    var x;
-    x = lazy_function();
-    print_value(x);
+ var a;
+ a = bar("5");
+ print("---");
+ var b;
+ b = inputi(a);
+ print("---");
+ print(b);
 }
-
-func print_value(value) {
-    print(value);
-}
-
-func lazy_function() {
-    print("Lazy function evaluated");
-    return 30;
-}
-
-
-
-
-
-
-
-
-
-
-
     """
 
     inter = Interpreter()
