@@ -246,7 +246,7 @@ class Interpreter(InterpreterBase):
                     f"Variable {var} has not been defined",
                 ) 
         elif expr.elem_type == 'neg':
-            op1 = self.eval_expr(expr.dict['op1'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             if isinstance(op1,bool):
                 super().error(
                     ErrorType.TYPE_ERROR,
@@ -260,7 +260,7 @@ class Interpreter(InterpreterBase):
                     "Incompatible types for neg operation",
                 ) 
         elif expr.elem_type == '!':
-            op1 = self.eval_expr(expr.dict['op1'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             if isinstance(op1, bool):
                 return not op1
             else:
@@ -426,13 +426,15 @@ class Interpreter(InterpreterBase):
             if expr == None:
                 return self.Nil()
             else:
-                closure = self.eval_expr(expr)
-                value = None
-                if isinstance(closure,self.Closure):
-                    value = self.resolve_closure(closure)
-                else:
-                    value = closure
-                return value
+                snapshot = self.__get_snapshot()
+                return self.Closure(expr,snapshot)
+                #losure = self.eval_expr(expr)
+                #value = None
+                #if isinstance(closure,self.Closure):
+                #    value = self.resolve_closure(closure)
+                #else:
+                #    value = closure
+                #return value
         elif statement.elem_type == 'raise':
             self.raise_exception(self.eval_expr(statement.dict['exception_type']))
         elif statement.elem_type == 'try':
@@ -531,22 +533,17 @@ class Interpreter(InterpreterBase):
     
 if __name__ == '__main__':
     program_source = """
+func bar(x) {
+ print("bar: ", x);
+ return x;
+}
+
 func main() {
-    var x;
-    x = lazy_function();
-    print_value(x);
-    print_value(x); 
+ var a;
+ a = -bar(1);
+ print("---");
+ print(a);
 }
-
-func print_value(value) {
-    print(value);
-}
-
-func lazy_function() {
-    print("Lazy function evaluated");
-    return 7;
-}
-
     """
 
     inter = Interpreter()
