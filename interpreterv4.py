@@ -429,7 +429,13 @@ class Interpreter(InterpreterBase):
             if expr == None:
                 return self.Nil()
             else:
-                return self.eval_expr(expr)
+                closure = self.eval_expr(expr)
+                value = None
+                if isinstance(closure,self.Closure):
+                    value = self.resolve_closure(closure)
+                else:
+                    value = closure
+                return value
         elif statement.elem_type == 'raise':
             self.raise_exception(self.eval_expr(statement.dict['exception_type']))
         elif statement.elem_type == 'try':
@@ -528,8 +534,10 @@ class Interpreter(InterpreterBase):
 if __name__ == '__main__':
     program_source = """
 func main() {
-    print_value(lazy_function());
-    print_value(lazy_function()); 
+    var x;
+    x = lazy_function();
+    print_value(x);
+    print_value(x); 
 }
 
 func print_value(value) {
@@ -540,11 +548,6 @@ func lazy_function() {
     print("Lazy function evaluated");
     return 7;
 }
-
-
-
-
-
 
     """
 
