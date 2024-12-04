@@ -14,9 +14,9 @@ class Interpreter(InterpreterBase):
             self.exception_type = exception_type
 
     class Closure:
-        def __init__(self,expr,scope):
+        def __init__(self,expr,env):
             self.expr = expr
-            self.scope = scope
+            self.env = env
             self.evaluated = False
             self.value = None
 
@@ -28,6 +28,22 @@ class Interpreter(InterpreterBase):
         if expr.elem_type == '+':
             op1 = self.eval_expr(expr.dict['op1'])
             op2 = self.eval_expr(expr.dict['op2'])
+            if isinstance(op1,self.Closure):
+                print(f"Resolving closure: {op1}")
+                print(op1.expr)
+                c1 = op1
+                while isinstance(c1, self.Closure):
+                    if not c1.evaluated:
+                        print(f"Evaluating closure: {c1}")
+                        self.env_stack.append(c1.env)
+                        c1 = self.eval_expr(c1.expr)
+                        op1.evaluated = True
+                        op1.value = c1
+                        self.env_stack.pop()
+                    else:
+                        print(f"Using cached value for closure: {c1.value}")
+                        c1 = c1.value
+                op1 = c1
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -344,7 +360,12 @@ class Interpreter(InterpreterBase):
                 if var in self.env_stack[-1][-i] and not found:
                     found = True
                     #self.env_stack[-1][-i][var] = self.eval_expr(statement.dict['expression'])
-                    self.env_stack[-1][-i][var] = self.Closure(statement.dict['expression'],copy.deepcopy(self.env_stack))
+                    snapshot = []
+                    for j in range(len(self.env_stack[-1])):
+                        snapshot.append({})
+                        for var_to_copy in self.env_stack[-1][j]:
+                            snapshot[j][var_to_copy] = self.env_stack[-1][j][var_to_copy]
+                    self.env_stack[-1][-i][var] = self.Closure(statement.dict['expression'],snapshot)
             if(not found): #still not found??
                 super().error(
                 ErrorType.NAME_ERROR,
@@ -499,15 +520,12 @@ if __name__ == '__main__':
     program_source = """
 func main() {
     var x;
-    x = lazy_function();
-    var y;
-    y = 5 + x;
-    print("Before using y");
-    print(y);
+    x = 0;
+    x = x + 1;
+    print(x);
 }
 
-func lazy_function() {
-    print("Lazy function evaluated");
+func foo() {
     return 3;
 }
 
