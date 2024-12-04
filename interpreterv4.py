@@ -34,11 +34,18 @@ class Interpreter(InterpreterBase):
         self.env_stack.pop()
         return result
 
+    def process_op(self, op):
+        if isinstance(op,self.Closure):
+            c = op
+            while isinstance(c, self.Closure):
+                c = self.resolve_closure(c)
+            op = c
+        return op
 
     def eval_expr(self, expr):
         if expr.elem_type == '+':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1,self.Closure):
                 c1 = op1
                 while isinstance(c1, self.Closure):
@@ -59,8 +66,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
         elif expr.elem_type == '-':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -74,8 +81,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
         elif expr.elem_type == '*':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -89,8 +96,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
         elif expr.elem_type == '/':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -107,22 +114,22 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for arithmetic operation",
             )
         elif expr.elem_type == '==':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if type(op1) == type(op2):
                 return (op1 == op2)
             else:
                 return False
         elif expr.elem_type == '!=':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if type(op1) == type(op2):
                 return (op1 != op2)
             else:
                 return True
         elif expr.elem_type == '<':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -136,8 +143,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for < operation",
             )
         elif expr.elem_type == '<=':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -151,8 +158,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for <= operation",
             )
         elif expr.elem_type == '>':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -166,8 +173,8 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for > operation",
             )
         elif expr.elem_type == '>=':
-            op1 = self.eval_expr(expr.dict['op1'])
-            op2 = self.eval_expr(expr.dict['op2'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) or isinstance(op2, bool):
                 super().error(
                 ErrorType.TYPE_ERROR,
@@ -181,7 +188,7 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for >= operation",
             )
         elif expr.elem_type == '&&':
-            op1 = self.eval_expr(expr.dict['op1'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             if isinstance(op1, bool):
                 if op1 == False:
                     return False
@@ -190,7 +197,7 @@ class Interpreter(InterpreterBase):
                 ErrorType.TYPE_ERROR,
                 "Incompatible types for && operation",
             )
-            op2 = self.eval_expr(expr.dict['op2'])
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 and op2
             else:
@@ -199,7 +206,7 @@ class Interpreter(InterpreterBase):
                 "Incompatible types for && operation",
             )
         elif expr.elem_type == '||':
-            op1 = self.eval_expr(expr.dict['op1'])
+            op1 = self.process_op(self.eval_expr(expr.dict['op1']))
             if isinstance(op1, bool):
                 if op1 == True:
                     return True
@@ -208,7 +215,7 @@ class Interpreter(InterpreterBase):
                 ErrorType.TYPE_ERROR,
                 "Incompatible types for && operation",
             )
-            op2 = self.eval_expr(expr.dict['op2'])
+            op2 = self.process_op(self.eval_expr(expr.dict['op2']))
             if isinstance(op1, bool) and isinstance(op2, bool):
                 return op1 or op2
             else:
@@ -517,16 +524,15 @@ if __name__ == '__main__':
     program_source = """
 func main() {
     var x;
-    x = 0;
-    print("fX");
-    x = foo() + 1;
+    x = lazy_function();
     print(x);
 }
 
-func foo() {
-    print("f");
-    return 3;
+func lazy_function() {
+    print("Lazy function evaluated");
+    return 42;
 }
+
 
 
 
